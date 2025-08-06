@@ -1,241 +1,274 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import moment from "moment";
+import useAxiosHook from "../../utils/axiosHook";
+
 
 const SubmitDonation = () => {
-  const [formData, setFormData] = useState({
-    donorId: "",
-    donorName: "",
-    address: "",
-    phone: "",
-    incomeCategory: "",
-    amount: "",
-    quantity: "",
-    unit: "",
-    paymentOption: "নগদ টাকা গ্রহণ",
-    reference: "",
-  });
+    const axiosHook = useAxiosHook(); // Assuming you have a custom hook for axios requests
+    const {
+        register,
+        handleSubmit,
+        reset,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm();
 
-  // Fake dropdown data (replace with DB values later)
-  const addressList = ["কুষ্টিয়া", "ঝিনাইদহ"];
-  const incomeCategories = ["যাকাত", "সদকা"];
-  const unitOptions = ["কেজি", "পিস"];
-  const references = ["মোঃ কামরুল", "মোঃ রহিম"];
+    // Initial static values
+    const [addressList, setAddressList] = useState(["কুষ্টিয়া", "ঝিনাইদহ"]);
+    const [incomeCategories, setIncomeCategories] = useState(["যাকাত", "সদকা"]);
+    const [unitOptions, setUnitOptions] = useState(["কেজি", "পিস"]);
+    const [references, setReferences] = useState(["মোঃ কামরুল", "মোঃ রহিম"]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    // Allow only numbers for certain fields
-    if (
-      ["phone", "amount", "quantity"].includes(name) &&
-      value !== "" &&
-      !/^\d+$/.test(value)
-    ) {
-      return;
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleReset = () => {
-    setFormData({
-      donorId: "",
-      donorName: "",
-      address: "",
-      phone: "",
-      incomeCategory: "",
-      amount: "",
-      quantity: "",
-      unit: "",
-      paymentOption: "নগদ টাকা গ্রহণ",
-      reference: "",
+    const [newField, setNewField] = useState({
+        address: false,
+        category: false,
+        unit: false,
+        reference: false,
     });
-  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const donationData = {
-      ...formData,
-      date: moment().format("DD.MM.YYYY"),
-      month: moment().format("MM"),
-      year: moment().format("YYYY"),
+    const watchFields = {
+        address: watch("address"),
+        incomeCategory: watch("incomeCategory"),
+        unit: watch("unit"),
+        reference: watch("reference"),
     };
 
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/submitDonation`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // if using cookie-based JWT
-        body: JSON.stringify(donationData),
-      });
+    const handleAddNewOption = (field, value) => {
+        const trimmed = value.trim();
+        if (!trimmed) return;
 
-      const result = await res.json();
+        const setMap = {
+            address: setAddressList,
+            category: setIncomeCategories,
+            unit: setUnitOptions,
+            reference: setReferences,
+        };
 
-      if (res.ok) {
-        alert("ডোনেশন সফলভাবে যুক্ত হয়েছে!");
-        handleReset();
-      } else {
-        alert(result.message || "কিছু ভুল হয়েছে");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("সার্ভার সংযোগে সমস্যা হয়েছে");
-    }
-  };
+        const newValueMap = {
+            address: "address",
+            category: "incomeCategory",
+            unit: "unit",
+            reference: "reference",
+        };
 
-  return (
-    <div className="max-w-2xl mx-auto bg-white p-6 shadow rounded-md mt-6">
-      <h2 className="text-xl font-bold mb-4 text-center">দাতার বিবরণ</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+        setMap[field]((prev) => [...prev, trimmed]);
+        setValue(newValueMap[field], trimmed);
+        setNewField((prev) => ({ ...prev, [field]: false }));
+    };
 
-        {/* Donor ID (optional) */}
-        <input
-          type="text"
-          name="donorId"
-          placeholder="আইডি (ঐচ্ছিক)"
-          value={formData.donorId}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+    const onSubmit = async (data) => {
+        const fullData = {
+            ...data,
+            date: moment().format("DD.MM.YYYY"),
+            month: moment().format("MMMM"),
+            year: moment().format("YYYY"),
+        };
+        console.log(fullData);
 
-        {/* Donor Name */}
-        <input
-          type="text"
-          name="donorName"
-          placeholder="দাতার নাম"
-          required
-          value={formData.donorName}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+        // try {
+        //   const res = await axiosHook.post("/submitDonation", fullData);
+        //   if (res?.data?.insertedId || res?.data?.acknowledged) {
+        //     alert("ডোনেশন সফলভাবে যুক্ত হয়েছে!");
+        //     reset();
+        //   }
+        // } catch (err) {
+        //   console.error(err);
+        //   alert("সার্ভার ত্রুটি! আবার চেষ্টা করুন।");
+        // }
+    };
 
-        {/* Address */}
-        <select
-          name="address"
-          required
-          value={formData.address}
-          onChange={handleChange}
-          className="select select-bordered w-full"
-        >
-          <option value="">দাতার ঠিকানা নির্বাচন করুন</option>
-          {addressList.map((address, i) => (
-            <option key={i} value={address}>
-              {address}
-            </option>
-          ))}
-        </select>
+    return (
+        <div className="max-w-2xl mx-auto bg-white p-6 shadow rounded-md mt-6">
+            <h2 className="text-xl font-bold mb-4 text-center">দাতার বিবরণ</h2>
 
-        {/* Mobile number (optional) */}
-        <input
-          type="text"
-          name="phone"
-          placeholder="দাতার মোবাইল নাম্বার (ঐচ্ছিক)"
-          value={formData.phone}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <input
+                    type="text"
+                    placeholder="আইডি (ঐচ্ছিক)"
+                    {...register("donorId")}
+                    className="input input-bordered w-full"
+                />
 
-        {/* Income Category */}
-        <select
-          name="incomeCategory"
-          required
-          value={formData.incomeCategory}
-          onChange={handleChange}
-          className="select select-bordered w-full"
-        >
-          <option value="">আয়ের ক্যাটাগরি নির্বাচন করুন</option>
-          {incomeCategories.map((cat, i) => (
-            <option key={i} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+                <input
+                    type="text"
+                    placeholder="দাতার নাম"
+                    {...register("donorName", { required: true })}
+                    className="input input-bordered w-full"
+                />
 
-        {/* Amount */}
-        <input
-          type="text"
-          name="amount"
-          placeholder="টাকার পরিমান"
-          required
-          value={formData.amount}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+                {/* Address */}
+                {!newField.address ? (
+                    <select
+                        {...register("address", { required: true })}
+                        className="select select-bordered w-full"
+                        onChange={(e) =>
+                            e.target.value === "ADD_NEW"
+                                ? setNewField({ ...newField, address: true })
+                                : setValue("address", e.target.value)
+                        }
+                    >
+                        <option value="">ঠিকানা নির্বাচন করুন</option>
+                        {addressList.map((item, idx) => (
+                            <option key={idx} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                        <option value="ADD_NEW">নতুন ঠিকানা যোগ করুন...</option>
+                    </select>
+                ) : (
+                    <input
+                        type="text"
+                        placeholder="নতুন ঠিকানা লিখুন"
+                        className="input input-bordered w-full"
+                        onBlur={(e) => handleAddNewOption("address", e.target.value)}
+                        autoFocus
+                    />
+                )}
 
-        {/* Quantity */}
-        <input
-          type="text"
-          name="quantity"
-          placeholder="পরিমাণ"
-          required
-          value={formData.quantity}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+                {/* Phone */}
+                <input
+                    type="text"
+                    placeholder="দাতার মোবাইল নাম্বার (ঐচ্ছিক)"
+                    {...register("phone", {
+                        pattern: /^[0-9]*$/,
+                    })}
+                    className="input input-bordered w-full"
+                />
 
-        {/* Unit */}
-        <select
-          name="unit"
-          required
-          value={formData.unit}
-          onChange={handleChange}
-          className="select select-bordered w-full"
-        >
-          <option value="">ইউনিট নির্বাচন করুন</option>
-          {unitOptions.map((unit, i) => (
-            <option key={i} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
+                {/* Category */}
+                {!newField.category ? (
+                    <select
+                        {...register("incomeCategory", { required: true })}
+                        className="select select-bordered w-full"
+                        onChange={(e) =>
+                            e.target.value === "ADD_NEW"
+                                ? setNewField({ ...newField, category: true })
+                                : setValue("incomeCategory", e.target.value)
+                        }
+                    >
+                        <option value="">আয়ের ক্যাটাগরি নির্বাচন করুন</option>
+                        {incomeCategories.map((item, idx) => (
+                            <option key={idx} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                        <option value="ADD_NEW">নতুন ক্যাটাগরি যোগ করুন...</option>
+                    </select>
+                ) : (
+                    <input
+                        type="text"
+                        placeholder="নতুন ক্যাটাগরি লিখুন"
+                        className="input input-bordered w-full"
+                        onBlur={(e) => handleAddNewOption("category", e.target.value)}
+                        autoFocus
+                    />
+                )}
 
-        {/* Payment Option */}
-        <select
-          name="paymentOption"
-          required
-          value={formData.paymentOption}
-          onChange={handleChange}
-          className="select select-bordered w-full"
-        >
-          {["নগদ টাকা গ্রহণ", "বিকাশ একাউন্ট", "নগদ একাউন্ট", "ব্যাংক একাউন্ট"].map(
-            (option, i) => (
-              <option key={i} value={option}>
-                {option}
-              </option>
-            )
-          )}
-        </select>
+                {/* Amount */}
+                <input
+                    type="text"
+                    placeholder="টাকার পরিমান"
+                    {...register("amount", {
+                        required: true,
+                        pattern: /^\d+$/,
+                    })}
+                    className="input input-bordered w-full"
+                />
 
-        {/* Reference (Collector) */}
-        <select
-          name="reference"
-          required
-          value={formData.reference}
-          onChange={handleChange}
-          className="select select-bordered w-full"
-        >
-          <option value="">রেফারেন্স (আদায়কারী) নির্বাচন করুন</option>
-          {references.map((name, i) => (
-            <option key={i} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+                {/* Quantity */}
+                <input
+                    type="text"
+                    placeholder="পরিমাণ"
+                    {...register("quantity", {
+                        required: true,
+                        pattern: /^\d+$/,
+                    })}
+                    className="input input-bordered w-full"
+                />
 
-        {/* Buttons */}
-        <div className="flex justify-between">
-          <button type="submit" className="btn btn-primary">
-            সাবমিট করুন
-          </button>
-          <button type="button" className="btn btn-warning" onClick={handleReset}>
-            রিসেট
-          </button>
+                {/* Unit */}
+                {!newField.unit ? (
+                    <select
+                        {...register("unit", { required: true })}
+                        className="select select-bordered w-full"
+                        onChange={(e) =>
+                            e.target.value === "ADD_NEW"
+                                ? setNewField({ ...newField, unit: true })
+                                : setValue("unit", e.target.value)
+                        }
+                    >
+                        <option value="">ইউনিট নির্বাচন করুন</option>
+                        {unitOptions.map((item, idx) => (
+                            <option key={idx} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                        <option value="ADD_NEW">নতুন ইউনিট যোগ করুন...</option>
+                    </select>
+                ) : (
+                    <input
+                        type="text"
+                        placeholder="নতুন ইউনিট লিখুন"
+                        className="input input-bordered w-full"
+                        onBlur={(e) => handleAddNewOption("unit", e.target.value)}
+                        autoFocus
+                    />
+                )}
+
+                {/* Payment Option */}
+                <select
+                    {...register("paymentOption", { required: true })}
+                    className="select select-bordered w-full"
+                >
+                    <option value="নগদ টাকা গ্রহণ">নগদ টাকা গ্রহণ</option>
+                    <option value="বিকাশ একাউন্ট">বিকাশ একাউন্ট</option>
+                    <option value="নগদ একাউন্ট">নগদ একাউন্ট</option>
+                    <option value="ব্যাংক একাউন্ট">ব্যাংক একাউন্ট</option>
+                </select>
+
+                {/* Reference */}
+                {!newField.reference ? (
+                    <select
+                        {...register("reference", { required: true })}
+                        className="select select-bordered w-full"
+                        onChange={(e) =>
+                            e.target.value === "ADD_NEW"
+                                ? setNewField({ ...newField, reference: true })
+                                : setValue("reference", e.target.value)
+                        }
+                    >
+                        <option value="">রেফারেন্স নির্বাচন করুন</option>
+                        {references.map((item, idx) => (
+                            <option key={idx} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                        <option value="ADD_NEW">নতুন রেফারেন্স যোগ করুন...</option>
+                    </select>
+                ) : (
+                    <input
+                        type="text"
+                        placeholder="নতুন রেফারেন্স লিখুন"
+                        className="input input-bordered w-full"
+                        onBlur={(e) => handleAddNewOption("reference", e.target.value)}
+                        autoFocus
+                    />
+                )}
+
+                <div className="flex justify-between pt-2">
+
+                    <button type="button" onClick={() => reset()} className="btn btn-warning">
+                        রিসেট
+                    </button>
+                    <button type="submit" className="btn localBG text-white">
+                        সাবমিট করুন
+                    </button>
+                </div>
+            </form>
         </div>
-      </form>
-    </div>
-  );
+    );
 };
 
 export default SubmitDonation;
