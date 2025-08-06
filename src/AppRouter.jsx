@@ -4,6 +4,7 @@ import Login from "./Components/Admin/Login";
 import Home from "./Components/Home";
 import Protected from "./routes/Protected";
 import GuestRoute from "./GuestRoute";
+import SubmitDonation from "./Components/Admin/SubmitDonation";
 
 
 export const router = createBrowserRouter([
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
         errorElement: <div>Page not found</div>,
         children: [
             { path: "/", element: <Home /> },
+            { path: "/inputDonation", element: <Protected><SubmitDonation /></Protected> },
         ]
     },
 ]);
