@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+
+.localBG {
+  background-color: #134834;
+}
