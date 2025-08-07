@@ -28,11 +28,9 @@ const Header = () => {
                                     tabIndex={0}
                                     className="menu menu-sm dropdown-content border-2 border-gray-300 rounded-box z-1 mt-5 w-52 p-2 shadow">
                                     <li className='hover:bg-[#134834] rounded-md py-1 font-semibold text-[#134834] hover:text-white'>
-                                        <Link to='profile'>Profile</Link>
+                                        <Link to='/addDonation'>Add donation</Link>
                                     </li>
-                                    <li className='hover:bg-[#134834] rounded-md py-1 font-semibold text-[#134834] hover:text-white'>
-                                        <a>Settings</a>
-                                    </li>
+
                                     <li className='hover:bg-[#134834] rounded-md py-1 font-semibold text-[#134834] hover:text-white'>
                                         <Link onClick={handleLogout}>Logout</Link>
                                     </li>

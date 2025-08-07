@@ -1,40 +1,80 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useContext, useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import moment from "moment";
-import useAxiosHook from "../../utils/axiosHook";
+import toast from "react-hot-toast";
+import ContextData from "../../ContextData";
+import useAxiosHook from "../../utils/useAxiosHook";
+import useAxiosSecure from "../../utils/useAxiosSecure";
 
 
 const SubmitDonation = () => {
     const axiosHook = useAxiosHook(); // Assuming you have a custom hook for axios requests
+    const axiosSecure = useAxiosSecure(); // Assuming you have a custom hook for axios requests
+    const { user } = useContext(ContextData); // Assuming you have a DataContext to get user info
+
+    //_________________________________________________________________________________________________________
     const {
         register,
         handleSubmit,
+        control,
         reset,
-        watch,
         setValue,
         formState: { errors },
     } = useForm();
 
+
+    const donorIdValue = useWatch({ control, name: "donorId" });
+    // __________________________________________________________________________________________________________
+    useEffect(() => {
+        const fetchDonorId = async () => {
+            if (!donorIdValue) return;
+
+            try {
+                // const res = await axiosSecure.get(`/donor/${donorIdValue}`);
+                const res = await axiosSecure.get(`/getDonorId/${donorIdValue}?email=${user?.email}`);
+                const donor = res?.data;
+
+                if (donor?.donorName) {
+                    setValue("donorName", donor.donorName);
+                    setValue("address", donor.address);
+                    setValue("phone", donor.phone);
+                } else {
+                    // Reset to default values if donor not found
+                    setValue("donorName", "");
+                    setValue("address", "");
+                    setValue("phone", "");
+                }
+            } catch (err) {
+                console.log("Donor not found or error fetching:", err);
+            }
+        };
+
+
+        fetchDonorId();
+
+    }, [user?.email, axiosSecure, donorIdValue, setValue]);
+    // __________________________________________________________________________________________________________
     // Initial static values
-    const [addressList, setAddressList] = useState(["কুষ্টিয়া", "ঝিনাইদহ"]);
+    const [addressList, setAddressList] = useState(["কুষ্টিয়া", "ঝিনাইদহ", "চিথলিয়া"]);
     const [incomeCategories, setIncomeCategories] = useState(["যাকাত", "সদকা"]);
     const [unitOptions, setUnitOptions] = useState(["কেজি", "পিস"]);
     const [references, setReferences] = useState(["মোঃ কামরুল", "মোঃ রহিম"]);
-
+    // ___________________________________________________________________________________________________________
     const [newField, setNewField] = useState({
         address: false,
         category: false,
         unit: false,
         reference: false,
     });
-
-    const watchFields = {
-        address: watch("address"),
-        incomeCategory: watch("incomeCategory"),
-        unit: watch("unit"),
-        reference: watch("reference"),
-    };
-
+    // _________________________________________________________________________________________________________
+    // const watchFields = {
+    //     address: watch("address"),
+    //     incomeCategory: watch("incomeCategory"),
+    //     unit: watch("unit"),
+    //     reference: watch("reference"),
+    // };
+    // _________________________________________________________________________________________________________
     const handleAddNewOption = (field, value) => {
         const trimmed = value.trim();
         if (!trimmed) return;
@@ -57,33 +97,61 @@ const SubmitDonation = () => {
         setValue(newValueMap[field], trimmed);
         setNewField((prev) => ({ ...prev, [field]: false }));
     };
-
+    // _________________________________________________________________________________________________________
     const onSubmit = async (data) => {
+        const selectedDate = data.date || new Date();
+
         const fullData = {
             ...data,
-            date: moment().format("DD.MM.YYYY"),
-            month: moment().format("MMMM"),
-            year: moment().format("YYYY"),
+            date: moment(selectedDate).format("DD.MMM.YYYY"),
+            month: moment(selectedDate).format("MMMM"),
+            year: moment(selectedDate).format("YYYY"),
         };
-        console.log(fullData);
 
-        // try {
-        //   const res = await axiosHook.post("/submitDonation", fullData);
-        //   if (res?.data?.insertedId || res?.data?.acknowledged) {
-        //     alert("ডোনেশন সফলভাবে যুক্ত হয়েছে!");
-        //     reset();
-        //   }
-        // } catch (err) {
-        //   console.error(err);
-        //   alert("সার্ভার ত্রুটি! আবার চেষ্টা করুন।");
-        // }
+        try {
+            const res = await axiosHook.post("/submitDonation", fullData);
+            if (res?.data?.insertedId || res?.data?.acknowledged) {
+                toast.success("ডোনেশন সফলভাবে যুক্ত হয়েছে!");
+                reset();
+            }
+        } catch (err) {
+            toast.error(err, "সার্ভার ত্রুটি! আবার চেষ্টা করুন।");
+        }
     };
+    // _________________________________________________________________________________________________________
+
 
     return (
         <div className="max-w-2xl mx-auto bg-white p-6 shadow rounded-md mt-6">
             <h2 className="text-xl font-bold mb-4 text-center">দাতার বিবরণ</h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Date Selection */}
+                <div>
+                    <label className="block mb-1 font-medium">তারিখ নির্বাচন করুন</label>
+                    <Controller
+                        className="w-full border border-red-500"
+                        control={control}
+                        name="date"
+                        defaultValue={new Date()}
+                        rules={{ required: true }}
+                        render={({ field }) => (
+                            <DatePicker
+                                className="input input-bordered w-full"
+                                placeholderText="তারিখ নির্বাচন করুন"
+                                selected={field.value}
+                                onChange={(date) => field.onChange(date)}
+                                maxDate={new Date()}
+                                minDate={moment().subtract(6, "days").toDate()}
+                                dateFormat="dd-MM-yyyy"
+                            />
+                        )}
+                    />
+                    {errors.date && (
+                        <span className="text-red-500 text-sm">তারিখ নির্বাচন আবশ্যক</span>
+                    )}
+                </div>
+
                 <input
                     type="text"
                     placeholder="আইডি (ঐচ্ছিক)"
@@ -118,13 +186,24 @@ const SubmitDonation = () => {
                         <option value="ADD_NEW">নতুন ঠিকানা যোগ করুন...</option>
                     </select>
                 ) : (
-                    <input
-                        type="text"
-                        placeholder="নতুন ঠিকানা লিখুন"
-                        className="input input-bordered w-full"
-                        onBlur={(e) => handleAddNewOption("address", e.target.value)}
-                        autoFocus
-                    />
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="নতুন ঠিকানা লিখুন"
+                            className="input input-bordered w-full"
+                            onBlur={(e) => handleAddNewOption("address", e.target.value)}
+                            autoFocus
+                        />
+                        <button
+                            type="button"
+                            className="cursor-pointer bg-red-500 text-white px-3 py-1 rounded"
+                            onClick={() => setNewField((prev) => ({ ...prev, address: false }))}
+                        >
+                            বাতিল
+                        </button>
+                    </div>
+
+
                 )}
 
                 {/* Phone */}
@@ -157,13 +236,23 @@ const SubmitDonation = () => {
                         <option value="ADD_NEW">নতুন ক্যাটাগরি যোগ করুন...</option>
                     </select>
                 ) : (
-                    <input
-                        type="text"
-                        placeholder="নতুন ক্যাটাগরি লিখুন"
-                        className="input input-bordered w-full"
-                        onBlur={(e) => handleAddNewOption("category", e.target.value)}
-                        autoFocus
-                    />
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="নতুন ক্যাটাগরি লিখুন"
+                            className="input input-bordered w-full"
+                            onBlur={(e) => handleAddNewOption("category", e.target.value)}
+                            autoFocus
+                        />
+                        <button
+                            type="button"
+                            className="cursor-pointer bg-red-500 text-white px-3 py-1 rounded"
+                            onClick={() => setNewField((prev) => ({ ...prev, category: false }))}
+                        >
+                            বাতিল
+                        </button>
+                    </div>
+
                 )}
 
                 {/* Amount */}
@@ -171,7 +260,7 @@ const SubmitDonation = () => {
                     type="text"
                     placeholder="টাকার পরিমান"
                     {...register("amount", {
-                        required: true,
+                        // required: true,
                         pattern: /^\d+$/,
                     })}
                     className="input input-bordered w-full"
@@ -182,7 +271,7 @@ const SubmitDonation = () => {
                     type="text"
                     placeholder="পরিমাণ"
                     {...register("quantity", {
-                        required: true,
+                        // required: true,
                         pattern: /^\d+$/,
                     })}
                     className="input input-bordered w-full"
@@ -191,7 +280,9 @@ const SubmitDonation = () => {
                 {/* Unit */}
                 {!newField.unit ? (
                     <select
-                        {...register("unit", { required: true })}
+                        {...register("unit", { 
+                            // required: true 
+                        })}
                         className="select select-bordered w-full"
                         onChange={(e) =>
                             e.target.value === "ADD_NEW"
@@ -208,13 +299,23 @@ const SubmitDonation = () => {
                         <option value="ADD_NEW">নতুন ইউনিট যোগ করুন...</option>
                     </select>
                 ) : (
-                    <input
-                        type="text"
-                        placeholder="নতুন ইউনিট লিখুন"
-                        className="input input-bordered w-full"
-                        onBlur={(e) => handleAddNewOption("unit", e.target.value)}
-                        autoFocus
-                    />
+
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="নতুন ইউনিট লিখুন"
+                            className="input input-bordered w-full"
+                            onBlur={(e) => handleAddNewOption("unit", e.target.value)}
+                            autoFocus
+                        />
+                        <button
+                            type="button"
+                            className="cursor-pointer bg-red-500 text-white px-3 py-1 rounded"
+                            onClick={() => setNewField((prev) => ({ ...prev, unit: false }))}
+                        >
+                            বাতিল
+                        </button>
+                    </div>
                 )}
 
                 {/* Payment Option */}
@@ -248,13 +349,22 @@ const SubmitDonation = () => {
                         <option value="ADD_NEW">নতুন রেফারেন্স যোগ করুন...</option>
                     </select>
                 ) : (
-                    <input
-                        type="text"
-                        placeholder="নতুন রেফারেন্স লিখুন"
-                        className="input input-bordered w-full"
-                        onBlur={(e) => handleAddNewOption("reference", e.target.value)}
-                        autoFocus
-                    />
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="নতুন রেফারেন্স লিখুন"
+                            className="input input-bordered w-full"
+                            onBlur={(e) => handleAddNewOption("reference", e.target.value)}
+                            autoFocus
+                        />
+                        <button
+                            type="button"
+                            className="cursor-pointer bg-red-500 text-white px-3 py-1 rounded"
+                            onClick={() => setNewField((prev) => ({ ...prev, reference: false }))}
+                        >
+                            বাতিল
+                        </button>
+                    </div>
                 )}
 
                 <div className="flex justify-between pt-2">

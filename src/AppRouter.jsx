@@ -20,7 +20,7 @@ export const router = createBrowserRouter([
         errorElement: <div>Page not found</div>,
         children: [
             { path: "/", element: <Home /> },
-            { path: "/inputDonation", element: <Protected><SubmitDonation /></Protected> },
+            { path: "/addDonation", element: <Protected><SubmitDonation /></Protected> },
         ]
     },
 ]);
