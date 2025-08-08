@@ -46,7 +46,7 @@ const SubmitDonation = () => {
                     setValue("phone", "");
                 }
             } catch (err) {
-                console.log("Donor not found or error fetching:", err.message);
+                toast.error("Donor not found or error fetching:", err.message);
             }
         };
 
@@ -56,10 +56,18 @@ const SubmitDonation = () => {
     }, [user?.email, axiosSecure, donorIdValue, setValue, refetch]);
     // __________________________________________________________________________________________________________
     // Initial static values
-    const [addressList, setAddressList] = useState(address);
-    const [incomeCategories, setIncomeCategories] = useState(category);
-    const [unitOptions, setUnitOptions] = useState(unit);
-    const [references, setReferences] = useState(reference);
+    const [addressList, setAddressList] = useState([]);
+    const [incomeCategories, setIncomeCategories] = useState([]);
+    const [unitOptions, setUnitOptions] = useState([]);
+    const [references, setReferences] = useState([]);
+
+    useEffect(() => {
+        setAddressList(address || []);
+        setIncomeCategories(category || []);
+        setUnitOptions(unit || []);
+        setReferences(reference || []);
+    }, [address, category, unit, reference]);
+
     // ___________________________________________________________________________________________________________
     const [newField, setNewField] = useState({
         address: false,
@@ -123,7 +131,7 @@ const SubmitDonation = () => {
 
 
     return (
-        <div className="max-w-2xl mx-auto bg-white p-6 shadow rounded-md mt-6">
+        <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg">
             <h2 className="text-xl font-bold mb-4 text-center">দাতার বিবরণ</h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -270,7 +278,7 @@ const SubmitDonation = () => {
                 {/* Quantity */}
                 <input
                     type="text"
-                    placeholder="পরিমাণ"
+                    placeholder="জিনিসের পরিমান"
                     {...register("quantity", {
                         // required: true,
                         pattern: /^\d+$/,
@@ -281,7 +289,7 @@ const SubmitDonation = () => {
                 {/* Unit */}
                 {!newField.unit ? (
                     <select
-                        {...register("unit", { 
+                        {...register("unit", {
                             // required: true 
                         })}
                         className="select select-bordered w-full"

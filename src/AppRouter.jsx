@@ -4,7 +4,9 @@ import Login from "./Components/Admin/Login";
 import Home from "./Components/Home";
 import Protected from "./routes/Protected";
 import GuestRoute from "./GuestRoute";
-import SubmitDonation from "./Components/Admin/SubmitDonation";
+import DonationList from "./Components/Pages/DonationList";
+import ExpenseList from "./Components/Pages/ExpenseList";
+import AddHadithModal from "./Components/Modal/AddHadithModal";
 
 
 export const router = createBrowserRouter([
@@ -20,7 +22,9 @@ export const router = createBrowserRouter([
         errorElement: <div>Page not found</div>,
         children: [
             { path: "/", element: <Home /> },
-            { path: "/addDonation", element: <Protected><SubmitDonation /></Protected> },
+            { path: "/donation", element: <Protected><DonationList /></Protected> },
+            { path: "/expense", element: <Protected><ExpenseList /></Protected> },
+            { path: "/hadith", element: <Protected><AddHadithModal /></Protected> },
         ]
     },
 ]);
