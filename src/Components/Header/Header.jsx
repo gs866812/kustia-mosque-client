@@ -5,7 +5,6 @@ import ContextData from '../../ContextData';
 
 const Header = () => {
     const { user, handleLogout } = useContext(ContextData);
-    console.log(user);
     return (
         <div className='w-full localBG'>
             <div className=' text-white flex justify-center items-center  mx-auto relative'>

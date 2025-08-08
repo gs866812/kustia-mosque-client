@@ -11,7 +11,7 @@ import useAxiosSecure from "../../utils/useAxiosSecure";
 const SubmitDonation = () => {
     const axiosHook = useAxiosHook(); // Assuming you have a custom hook for axios requests
     const axiosSecure = useAxiosSecure(); // Assuming you have a custom hook for axios requests
-    const { user } = useContext(ContextData); // Assuming you have a DataContext to get user info
+    const { user, refetch, setRefetch, address, category, unit, reference } = useContext(ContextData); // Assuming you have a DataContext to get user info
 
     //_________________________________________________________________________________________________________
     const {
@@ -46,20 +46,20 @@ const SubmitDonation = () => {
                     setValue("phone", "");
                 }
             } catch (err) {
-                console.log("Donor not found or error fetching:", err);
+                console.log("Donor not found or error fetching:", err.message);
             }
         };
 
 
         fetchDonorId();
 
-    }, [user?.email, axiosSecure, donorIdValue, setValue]);
+    }, [user?.email, axiosSecure, donorIdValue, setValue, refetch]);
     // __________________________________________________________________________________________________________
     // Initial static values
-    const [addressList, setAddressList] = useState(["কুষ্টিয়া", "ঝিনাইদহ", "চিথলিয়া"]);
-    const [incomeCategories, setIncomeCategories] = useState(["যাকাত", "সদকা"]);
-    const [unitOptions, setUnitOptions] = useState(["কেজি", "পিস"]);
-    const [references, setReferences] = useState(["মোঃ কামরুল", "মোঃ রহিম"]);
+    const [addressList, setAddressList] = useState(address);
+    const [incomeCategories, setIncomeCategories] = useState(category);
+    const [unitOptions, setUnitOptions] = useState(unit);
+    const [references, setReferences] = useState(reference);
     // ___________________________________________________________________________________________________________
     const [newField, setNewField] = useState({
         address: false,
@@ -111,11 +111,12 @@ const SubmitDonation = () => {
         try {
             const res = await axiosHook.post("/submitDonation", fullData);
             if (res?.data?.insertedId || res?.data?.acknowledged) {
+                setRefetch((prev) => !prev); // Toggle refetch to update the data
                 toast.success("ডোনেশন সফলভাবে যুক্ত হয়েছে!");
                 reset();
             }
         } catch (err) {
-            toast.error(err, "সার্ভার ত্রুটি! আবার চেষ্টা করুন।");
+            toast.error("সার্ভার ত্রুটি! আবার চেষ্টা করুন।", err.message);
         }
     };
     // _________________________________________________________________________________________________________

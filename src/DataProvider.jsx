@@ -4,6 +4,8 @@ import { auth } from '../firebase';
 import Cookies from "js-cookie";
 import axios from 'axios';
 import ContextData from './ContextData';
+import useAxiosSecure from './utils/useAxiosSecure';
+import toast from 'react-hot-toast';
 
 
 
@@ -11,6 +13,37 @@ import ContextData from './ContextData';
 const DataProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [refetch, setRefetch] = useState(false);
+    const [address, setAddress] = useState([]);
+    const [category, setCategory] = useState([]);
+    const [unit, setUnit] = useState([]);
+    const [reference, setReference] = useState([]);
+
+    const axiosSecure = useAxiosSecure();
+
+    // ******************************************************************************************************
+    // ******************************************************************************************************
+    useEffect(() => {
+        const fetchAddressCategoriesUnitReference = async () => {
+            if (!user?.email) return; // prevent running with undefined email
+
+            try {
+                const res = await axiosSecure.get(`/getDonationInfo?email=${user.email}`);
+                const info = res?.data;
+                if (info) {
+                    setAddress(info.address || []);
+                    setCategory(info.incomeCategories || []);
+                    setUnit(info.unit || []);
+                    setReference(info.reference || []);
+                }
+            } catch (err) {
+                console.error(err);
+                toast.error("Data not found or error fetching");
+            }
+        };
+
+        fetchAddressCategoriesUnitReference();
+    }, [user?.email, refetch, axiosSecure]);
 
     // ******************************************************************************************************
     // Setup auth state tracking
@@ -68,6 +101,12 @@ const DataProvider = ({ children }) => {
         user,
         loading,
         handleLogout,
+        refetch,
+        setRefetch,
+        address,
+        category,
+        unit,
+        reference,
     };
     // ******************************************************************************************************
     return <ContextData.Provider value={dataInfo}>{children}</ContextData.Provider>;
