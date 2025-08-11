@@ -14,6 +14,7 @@ const DataProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refetch, setRefetch] = useState(false);
+
     const [address, setAddress] = useState([]);
     const [category, setCategory] = useState([]);
     const [unit, setUnit] = useState([]);
@@ -22,6 +23,10 @@ const DataProvider = ({ children }) => {
     const [expenseUnit, setExpenseUnit] = useState([]);
     const [expenseCategory, setExpenseCategory] = useState([]);
     const [expenseReference, setExpenseReference] = useState([]);
+
+    const [hadith, setHadith] = useState([]);
+    const [donation, setDonation] = useState([]);
+    const [expense, setExpense] = useState([]);
 
     const axiosSecure = useAxiosSecure();
 
@@ -53,6 +58,53 @@ const DataProvider = ({ children }) => {
     }, [user?.email, refetch, axiosSecure]);
 
 
+    // ******************************************************************************************************
+    useEffect(() => {
+        const fetchHadithList = async () => {
+            try {
+                const res = await axiosSecure.get(`/hadithList?email=${user.email}`);
+                if (res?.data) {
+                    setHadith(res.data);
+                } else {
+                    toast.error("No hadith data found");
+                }
+            } catch (err) {
+                console.error("Error fetching hadith list:", err.message);
+            }
+        };
+
+        fetchHadithList();
+    }, [axiosSecure, refetch, user?.email]);
+    // ******************************************************************************************************
+    useEffect(() => {
+        const fetchDonationList = async () => {
+            try {
+                const res = await axiosSecure.get(`/donationList?email=${user.email}`);
+                if (res?.data) {
+                    setDonation(res.data);
+                }
+            } catch (err) {
+                console.error("Error fetching donation list:", err.message);
+            }
+        };
+
+        fetchDonationList();
+    }, [axiosSecure, refetch, user?.email]);
+    // ******************************************************************************************************
+    useEffect(() => {
+        const fetchExpenseList = async () => {
+            try {
+                const res = await axiosSecure.get(`/expenseList?email=${user.email}`);
+                if (res?.data) {
+                    setExpense(res.data);
+                }
+            } catch (err) {
+                console.error("Error fetching expense list:", err.message);
+            }
+        };
+
+        fetchExpenseList();
+    }, [axiosSecure, refetch, user?.email]);
     // ******************************************************************************************************
     // Setup auth state tracking
     useEffect(() => {
@@ -118,6 +170,9 @@ const DataProvider = ({ children }) => {
         expenseUnit,
         expenseCategory,
         expenseReference,
+        hadith,
+        donation,
+        expense,
     };
     // ******************************************************************************************************
     return <ContextData.Provider value={dataInfo}>{children}</ContextData.Provider>;

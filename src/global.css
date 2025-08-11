@@ -5,3 +5,7 @@
 .localBG {
   background-color: #134834;
 }
+
+table td tr {
+  border: 1px solid #bd6b6b;
+}

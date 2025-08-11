@@ -6,7 +6,8 @@ import Protected from "./routes/Protected";
 import GuestRoute from "./GuestRoute";
 import DonationList from "./Components/Pages/DonationList";
 import ExpenseList from "./Components/Pages/ExpenseList";
-import AddHadithModal from "./Components/Modal/AddHadithModal";
+import HadithList from "./Components/Pages/HadithList";
+
 
 
 export const router = createBrowserRouter([
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
             { path: "/", element: <Home /> },
             { path: "/donation", element: <Protected><DonationList /></Protected> },
             { path: "/expense", element: <Protected><ExpenseList /></Protected> },
-            { path: "/hadith", element: <Protected><AddHadithModal /></Protected> },
+            { path: "/hadith", element: <Protected><HadithList /></Protected> },
         ]
     },
 ]);

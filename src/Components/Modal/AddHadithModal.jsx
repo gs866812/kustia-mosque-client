@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import useAxiosHook from "../../utils/useAxiosHook"; // adjust if needed
 import ContextData from "../../ContextData";
+import moment from "moment";
 
 const AddHadithModal = () => {
     const { setRefetch } = useContext(ContextData);
@@ -19,8 +20,16 @@ const AddHadithModal = () => {
     });
     // __________________________________________________________________________
     const onSubmit = async (data) => {
+        const today = new Date();
+        
+
+        const fullData = {
+            ...data,
+            date: moment(today).format("DD.MMM.YYYY"),
+            month: moment(today).format("MMMM"),
+        };
         try {
-            const res = await axiosHook.post("/addHadith", data);
+            const res = await axiosHook.post("/addHadith", fullData);
             if (res?.data?.insertedId || res?.data?.acknowledged) {
                 toast.success("হাদিস সফলভাবে যোগ হয়েছে!");
                 reset();
@@ -42,7 +51,7 @@ const AddHadithModal = () => {
                     onClick={() =>
                         document.getElementById("addNewHadith").showModal()
                     }
-                    className="px-3 py-2 text-white localBG mt-3 rounded-md cursor-pointer mr-5"
+                    className="px-3 py-2 text-white localBG mt-3 rounded-md cursor-pointer"
                 >
                     নতুন যোগ করুন
                 </button>
@@ -65,12 +74,12 @@ const AddHadithModal = () => {
                                 placeholder="এখানে হাদিস লিখুন"
                                 className="textarea textarea-bordered w-full"
                                 {...register("hadith", {
-                                     required: "হাদিস আবশ্যক",
-                                     maxLength: {
+                                    required: "হাদিস আবশ্যক",
+                                    maxLength: {
                                         value: 150,
                                         message: "হাদিস 150 অক্ষরের বেশি হতে পারবে না",
-                                     }
-                                    })}
+                                    }
+                                })}
                             />
                             {errors.hadith && (
                                 <span className="text-red-500 text-sm">

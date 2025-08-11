@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
+import ContextData from '../../ContextData';
 
 const Footer = () => {
+    const {hadith} = useContext(ContextData);
     const [hadithList, setHadithList] = useState([]);
 
     useEffect(() => {
-        setHadithList([
-            { hadithList: 'তোমরা পরস্পরকে সালাম দাও, খাবার খাওয়াও, আত্মীয়তার সম্পর্ক রাখো এবং রাতের বেলা নামাজ পড়ো।" (তিরমিযি' },
-        ]);
-    }, []);
+        setHadithList(hadith);
+    }, [hadith]);
 
 
     return (
@@ -29,7 +29,7 @@ const Footer = () => {
             >
                 {hadithList.map((hadith, idx) => (
                     <SwiperSlide key={idx}>
-                        <p className="text-[18px] py-2">{hadith.hadithList}</p>
+                        <p className="text-[18px] py-2">{hadith.hadith}</p>
                     </SwiperSlide>
                 ))}
             </Swiper>
