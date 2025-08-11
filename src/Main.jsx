@@ -6,6 +6,7 @@ import { router } from './AppRouter';
 import DataProvider from './DataProvider';
 import { Toaster } from 'react-hot-toast';
 import "react-datepicker/dist/react-datepicker.css";
+import 'sweetalert2/src/sweetalert2.scss'
 
 
 createRoot(document.getElementById('root')).render(

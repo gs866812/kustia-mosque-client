@@ -6,6 +6,6 @@
   background-color: #134834;
 }
 
-table td tr {
-  border: 1px solid #bd6b6b;
+table, tr, td, th{
+    border: 1px solid gray;
 }

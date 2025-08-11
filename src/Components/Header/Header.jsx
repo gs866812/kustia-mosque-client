@@ -8,9 +8,9 @@ const Header = () => {
     return (
         <div className='w-full localBG'>
             <div className=' text-white flex justify-center items-center  mx-auto relative'>
-                <h2 className='font-poppins font-bold lg:text-4xl py-3 text-xl'>
+                <Link to='/' className='font-poppins font-bold lg:text-4xl py-3 text-xl'>
                     চিথলিয়া কেন্দ্রীয় জামে মসজিদ
-                </h2>
+                </Link>
 
                 <section className='absolute right-5 top-4 flex items-center'>
                     {

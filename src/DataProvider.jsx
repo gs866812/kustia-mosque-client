@@ -24,7 +24,6 @@ const DataProvider = ({ children }) => {
     const [expenseCategory, setExpenseCategory] = useState([]);
     const [expenseReference, setExpenseReference] = useState([]);
 
-    const [hadith, setHadith] = useState([]);
     const [donation, setDonation] = useState([]);
     const [expense, setExpense] = useState([]);
 
@@ -59,24 +58,10 @@ const DataProvider = ({ children }) => {
 
 
     // ******************************************************************************************************
-    useEffect(() => {
-        const fetchHadithList = async () => {
-            try {
-                const res = await axiosSecure.get(`/hadithList?email=${user.email}`);
-                if (res?.data) {
-                    setHadith(res.data);
-                } else {
-                    toast.error("No hadith data found");
-                }
-            } catch (err) {
-                console.error("Error fetching hadith list:", err.message);
-            }
-        };
+   
 
-        fetchHadithList();
-    }, [axiosSecure, refetch, user?.email]);
-    // ******************************************************************************************************
     useEffect(() => {
+         if (!user?.email) return;
         const fetchDonationList = async () => {
             try {
                 const res = await axiosSecure.get(`/donationList?email=${user.email}`);
@@ -84,7 +69,7 @@ const DataProvider = ({ children }) => {
                     setDonation(res.data);
                 }
             } catch (err) {
-                console.error("Error fetching donation list:", err.message);
+                console.error( err.message);
             }
         };
 
@@ -92,6 +77,7 @@ const DataProvider = ({ children }) => {
     }, [axiosSecure, refetch, user?.email]);
     // ******************************************************************************************************
     useEffect(() => {
+         if (!user?.email) return;
         const fetchExpenseList = async () => {
             try {
                 const res = await axiosSecure.get(`/expenseList?email=${user.email}`);
@@ -170,7 +156,6 @@ const DataProvider = ({ children }) => {
         expenseUnit,
         expenseCategory,
         expenseReference,
-        hadith,
         donation,
         expense,
     };
