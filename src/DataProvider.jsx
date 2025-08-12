@@ -24,7 +24,6 @@ const DataProvider = ({ children }) => {
     const [expenseCategory, setExpenseCategory] = useState([]);
     const [expenseReference, setExpenseReference] = useState([]);
 
-    const [donation, setDonation] = useState([]);
     const [expense, setExpense] = useState([]);
 
     const axiosSecure = useAxiosSecure();
@@ -57,24 +56,7 @@ const DataProvider = ({ children }) => {
     }, [user?.email, refetch, axiosSecure]);
 
 
-    // ******************************************************************************************************
-   
-
-    useEffect(() => {
-         if (!user?.email) return;
-        const fetchDonationList = async () => {
-            try {
-                const res = await axiosSecure.get(`/donationList?email=${user.email}`);
-                if (res?.data) {
-                    setDonation(res.data);
-                }
-            } catch (err) {
-                console.error( err.message);
-            }
-        };
-
-        fetchDonationList();
-    }, [axiosSecure, refetch, user?.email]);
+    
     // ******************************************************************************************************
     useEffect(() => {
          if (!user?.email) return;
@@ -156,7 +138,6 @@ const DataProvider = ({ children }) => {
         expenseUnit,
         expenseCategory,
         expenseReference,
-        donation,
         expense,
     };
     // ******************************************************************************************************

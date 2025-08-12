@@ -7,7 +7,7 @@ const AddDonationModal = () => {
             <section className='flex justify-end'>
                 <button
                     onClick={() => document.getElementById('addNewDonation').showModal()}
-                    className='px-3 py-2 text-white localBG mt-3 rounded-md cursor-pointer mr-5'>
+                    className='px-3 py-2 text-white localBG mt-3 rounded-md cursor-pointer'>
                     নতুন যোগ করুন
                 </button>
             </section>

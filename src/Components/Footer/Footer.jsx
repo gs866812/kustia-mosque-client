@@ -3,8 +3,8 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import ContextData from '../../ContextData';
-import useAxiosSecure from '../../utils/useAxiosSecure';
 import toast from 'react-hot-toast';
+import useAxiosHook from '../../utils/useAxiosHook';
 
 
 const Footer = () => {
@@ -12,18 +12,15 @@ const Footer = () => {
     const [hadithList, setHadithList] = useState([]);
 
 
-    const axiosSecure = useAxiosSecure();
+
+    const axiosHook = useAxiosHook();
 
 
     useEffect(() => {
         if (!user?.email) return;
         const fetchFullHadith = async () => {
             try {
-                const res = await axiosSecure.get(`/getFullHadithList`, {
-                    params: {
-                        email: user?.email,
-                    }
-                });
+                const res = await axiosHook.get(`/getFullHadithList`);
 
                 if (res?.data) {
                     setHadithList(res.data);
@@ -36,7 +33,7 @@ const Footer = () => {
         };
 
         fetchFullHadith();
-    }, [refetch, axiosSecure, user?.email]);
+    }, [refetch, axiosHook, user?.email]);
 
 
     return (

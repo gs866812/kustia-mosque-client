@@ -131,13 +131,12 @@ const SubmitDonation = () => {
 
 
     return (
-        <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg">
-            <h2 className="text-xl font-bold mb-4 text-center">দাতার বিবরণ</h2>
+        <div className="px-2">
+            <h2 className="text-xl font-bold mb-4">দাতার বিবরণ</h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {/* Date Selection */}
                 <div>
-                    <label className="block mb-1 font-medium">তারিখ নির্বাচন করুন</label>
                     <Controller
                         className="w-full border border-red-500"
                         control={control}
