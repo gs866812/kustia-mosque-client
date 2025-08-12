@@ -24,7 +24,6 @@ const DataProvider = ({ children }) => {
     const [expenseCategory, setExpenseCategory] = useState([]);
     const [expenseReference, setExpenseReference] = useState([]);
 
-    const [expense, setExpense] = useState([]);
 
     const axiosSecure = useAxiosSecure();
 
@@ -56,23 +55,6 @@ const DataProvider = ({ children }) => {
     }, [user?.email, refetch, axiosSecure]);
 
 
-    
-    // ******************************************************************************************************
-    useEffect(() => {
-         if (!user?.email) return;
-        const fetchExpenseList = async () => {
-            try {
-                const res = await axiosSecure.get(`/expenseList?email=${user.email}`);
-                if (res?.data) {
-                    setExpense(res.data);
-                }
-            } catch (err) {
-                console.error("Error fetching expense list:", err.message);
-            }
-        };
-
-        fetchExpenseList();
-    }, [axiosSecure, refetch, user?.email]);
     // ******************************************************************************************************
     // Setup auth state tracking
     useEffect(() => {
@@ -138,7 +120,6 @@ const DataProvider = ({ children }) => {
         expenseUnit,
         expenseCategory,
         expenseReference,
-        expense,
     };
     // ******************************************************************************************************
     return <ContextData.Provider value={dataInfo}>{children}</ContextData.Provider>;
