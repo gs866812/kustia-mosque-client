@@ -3,6 +3,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import useAxiosHook from "../utils/useAxiosHook";
 import { convertToBanglaDigits } from "../utils/convertNumber";
+import bkash from "../assets/bkash_transparent.png";
+import nagad from "../assets/nagad.webp";
+import islamiBank from "../assets/islami-bank.webp";
 
 // helpers
 const toBdt = (n, frac = 0) =>
@@ -26,19 +29,25 @@ const AutoScrollList = ({ heightPx, items, renderRow, visibleCount = 4, speedSec
           100% { transform: translateY(-50%); }
         }
       `}</style>
+
             <div
-                className="w-full"
+                className="w-full" /* no -mt anymore */
                 style={{ animation: shouldAnimate ? `${speedSec}s linear infinite scrollY` : "none" }}
             >
-                <ul className="divide-y divide-emerald-100">
+                <ul className="m-0 p-0 list-none">
                     {items.map((it, idx) => (
-                        <li key={`a-${idx}`} className={`${rowClass} flex items-center`}>{renderRow(it, idx)}</li>
+                        <li key={`a-${idx}`} className={`${rowClass} flex items-center`}>
+                            {renderRow(it, idx)}
+                        </li>
                     ))}
                 </ul>
+
                 {shouldAnimate && (
-                    <ul className="divide-y divide-emerald-100" aria-hidden="true">
+                    <ul className="m-0 p-0 list-none" aria-hidden="true">
                         {items.map((it, idx) => (
-                            <li key={`b-${idx}`} className={`${rowClass} flex items-center`}>{renderRow(it, idx)}</li>
+                            <li key={`b-${idx}`} className={`${rowClass} flex items-center`}>
+                                {renderRow(it, idx)}
+                            </li>
                         ))}
                     </ul>
                 )}
@@ -46,6 +55,8 @@ const AutoScrollList = ({ heightPx, items, renderRow, visibleCount = 4, speedSec
         </div>
     );
 };
+
+
 
 const Home = () => {
 
@@ -76,7 +87,7 @@ const Home = () => {
     const endOfPrevMonth = useMemo(() => moment().subtract(1, "month").endOf("month").toDate(), []);
 
     useEffect(() => {
-        const LIST_LIMIT = 5;               // <— show only recent 30 in scrollers
+        const LIST_LIMIT = 30;               // <— show only recent 30 in scrollers
         const LIST_SCOPE = "all";            // "all" = latest 30 overall; "month" = latest 30 of current month
 
         const fetchAll = async () => {
@@ -167,8 +178,8 @@ const Home = () => {
     // balances
     const previousBalance = (prevDonTotal || 0) - (prevExpTotal || 0); // excluding current month
     const currentNet = (curDonTotal || 0) - (curExpTotal || 0);
-    // Per your rule: মোট স্থিতি = পূর্বের স্থিতি - current মাসের স্থিতি
-    const totalBalance = previousBalance - currentNet;
+    // Per your rule: মোট স্থিতি = পূর্বের স্থিতি + current মাসের স্থিতি
+    const totalBalance = previousBalance + currentNet;
 
     // layout tuning for 1366×768:
     const rowHeight = 44; // tighter rows to fit payment bar
@@ -176,36 +187,64 @@ const Home = () => {
 
     return (
         <div className="h-full w-full bg-[#F4F6E8] flex flex-col items-center overflow-hidden">
-            <div className="w-full max-w-[1366px] mx-auto px-4 py-3 h-full flex flex-col overflow-hidden">
+            <div className="w-[80%] max-w-[1366px] mx-auto px-4 py-3 h-full flex flex-col overflow-hidden gap-8 justify-center mt-6">
                 {/* ===== Summary (compact) ===== */}
-                <div className="rounded-2xl shadow-md border border-emerald-900/30 bg-white overflow-hidden">
-                    <div className="bg-emerald-900 text-white px-4 py-2 flex items-center justify-between">
-                        <h3 className="text-base md:text-lg font-bold">মসজিদের পূর্বের স্থিতিঃ</h3>
-                        <div className="text-xl md:text-2xl font-extrabold">{toBdt(previousBalance)}</div>
+                <div className="rounded-2xl shadow-lg border-2 border-yellow-500 bg-white overflow-hidden">
+                    <div className="bg-emerald-900 text-white py-1 flex items-center justify-between border-b-2 border-yellow-500">
+                        <h3 className="text-base md:text-lg font-bold text-center w-1/2">মসজিদের পূর্বের স্থিতিঃ</h3>
+                        <div className="text-xl md:text-2xl font-extrabold text-center w-1/2">{toBdt(previousBalance)}</div>
                     </div>
 
                     {/* One line: আয় & ব্যয় */}
-                    <div className="px-4 py-2 flex flex-wrap items-center justify-between text-emerald-900 gap-3">
+                    {/* <div className="px-35 py-2 flex flex-wrap items-center text-emerald-900 gap-3">
                         <p className="text-lg font-bold">
                             {monthKey}-মাসের আয় <span className="text-emerald-700">{toBdt(curDonTotal)}</span>
                         </p>
                         <p className="text-lg font-bold">
                             {monthKey}-মাসের ব্যয় <span className="text-red-600">{toBdt(curExpTotal)}</span>
                         </p>
-                    </div>
+                    </div> */}
 
                     {/* মাসের স্থিতি + মোট স্থিতি */}
-                    <div className="px-4 pb-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div className="rounded-lg border border-emerald-900/20 bg-white">
+                    <div className="px-4 py-0 grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className="border-r border-yellow-500 bg-white">
                             <div className="text-center py-2">
-                                <p className="text-sm font-semibold">{monthKey}-মাসের স্থিতি</p>
-                                <p className="text-xl font-extrabold mt-1">{toBdt(currentNet)}</p>
+                                <p className="text-lg font-bold flex flex-col">
+                                    {monthKey}-মাসের আয়ঃ 
+                                    <span className="text-emerald-700">{toBdt(curDonTotal)}</span>
+                                </p>
                             </div>
                         </div>
-                        <div className="rounded-lg border border-emerald-900/20 bg-white">
+                        <div className="bg-white">
                             <div className="text-center py-2">
-                                <p className="text-sm font-semibold">মোট স্থিতি</p>
-                                <p className="text-xl font-extrabold mt-1">{toBdt(totalBalance)}</p>
+                                 <p className="text-lg font-bold flex flex-col">
+                                    {monthKey}-মাসের ব্যয়ঃ
+                                    <span className="text-red-600">{toBdt(curExpTotal)}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="px-4 pb-0 grid grid-cols-1 md:grid-cols-2 gap-2 border border-l-0 border-r-0 border-t-yellow-500 border-b-yellow-500">
+                        <div className=" bg-white border-r border-yellow-500">
+                            <div className="text-center py-2">
+                                <p className="text-lg font-bold">{monthKey}-মাসের স্থিতি</p>
+                            </div>
+                        </div>
+                        <div className="bg-white">
+                            <div className="text-center py-2">
+                                <p className="text-lg font-bold">{toBdt(currentNet)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="px-4 pb-0 grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className=" bg-white  border-r border-yellow-500">
+                            <div className="text-center py-2 ">
+                                <p className="text-lg font-bold">মোট স্থিতি</p>
+                            </div>
+                        </div>
+                        <div className=" bg-white">
+                            <div className="text-center py-2">
+                                <p className="text-lg font-bold">{toBdt(totalBalance)}</p>
                             </div>
                         </div>
                     </div>
@@ -214,14 +253,21 @@ const Home = () => {
                 {/* ===== Two lists (compact, no extra list header) ===== */}
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 overflow-hidden">
                     {/* Donation */}
-                    <div className="rounded-2xl shadow-md border border-emerald-900/30 bg-white overflow-hidden flex flex-col">
-                        {/* table header row */}
-                        <div className="grid grid-cols-12 bg-emerald-100 text-emerald-900 font-semibold px-3 py-2 text-sm">
+                    <div className="rounded-2xl border-2 border-yellow-500 bg-white overflow-hidden flex flex-col shadow-2xl">
+
+                        {/* Header (keep yellow bottom border, no vertical lines here) */}
+                        <div className="grid grid-cols-12 bg-emerald-900 text-white font-bold px-3 py-2 border-b-2 border-yellow-500">
                             <div className="col-span-5">দান দাতাগণের নাম</div>
                             <div className="col-span-4 text-center">ঠিকানা</div>
-                            <div className="col-span-3 text-right">সাদাকার পরিমান</div>
+                            <div className="col-span-3 text-right">অর্থের পরিমান</div>
                         </div>
-                        <div className="px-3 pb-2 flex-1 overflow-hidden">
+
+                        {/* Body */}
+                        <div className="relative px-3 pb-2 flex-1 overflow-hidden">
+                            {/* vertical rails (inside the padded area so they align with grid columns) */}
+                            <span className="pointer-events-none absolute -top-[2px] bottom-0 left-[41.6667%] w-[2px] bg-yellow-500"></span> {/* 5/12 */}
+                            <span className="pointer-events-none absolute -top-[2px] bottom-0 left-[75%] w-[2px] bg-yellow-500"></span>        {/* 9/12 */}
+
                             <AutoScrollList
                                 heightPx={visibleRows * rowHeight}
                                 visibleCount={visibleRows}
@@ -229,7 +275,7 @@ const Home = () => {
                                 rowClass="h-11"
                                 items={donations}
                                 renderRow={(it) => (
-                                    <div className="grid grid-cols-12 w-full text-sm">
+                                    <div className="grid grid-cols-12 w-full text-xl">
                                         <div className="col-span-5 truncate pr-2">{it.donorName}</div>
                                         <div className="col-span-4 text-center truncate px-2">{it.address}</div>
                                         <div className="col-span-3 text-right font-bold">{toBdt(it.amount)}</div>
@@ -239,13 +285,22 @@ const Home = () => {
                         </div>
                     </div>
 
+
+
+
+
+
                     {/* Expense */}
-                    <div className="rounded-2xl shadow-md border border-emerald-900/30 bg-white overflow-hidden flex flex-col">
-                        <div className="grid grid-cols-12 bg-emerald-100 text-emerald-900 font-semibold px-3 py-2 text-sm">
+                    <div className="rounded-2xl border-2 border-yellow-500 bg-white overflow-hidden flex flex-col shadow-2xl">
+
+                        <div className="grid grid-cols-12 bg-emerald-900 text-white font-bold px-3 py-2 border-b-2 border-yellow-500">
                             <div className="col-span-8">খরচের বিবরণ</div>
                             <div className="col-span-4 text-right">অর্থের পরিমান</div>
                         </div>
-                        <div className="px-3 pb-2 flex-1 overflow-hidden">
+
+                        <div className="relative px-3 pb-2 flex-1 overflow-hidden">
+                            <span className="pointer-events-none absolute -top-[2px] bottom-0 left-[66.6667%] w-[2px] bg-yellow-500"></span> {/* 8/12 */}
+
                             <AutoScrollList
                                 heightPx={visibleRows * rowHeight}
                                 visibleCount={visibleRows}
@@ -253,31 +308,43 @@ const Home = () => {
                                 rowClass="h-11"
                                 items={expenses}
                                 renderRow={(it) => (
-                                    <div className="grid grid-cols-12 w-full text-sm">
+                                    <div className="grid grid-cols-12 w-full text-xl">
                                         <div className="col-span-8 truncate pr-2">{it.expense}</div>
-                                        <div className="col-span-4 text-right font-bold text-red-600">
-                                            {toBdt(it.amount)}
-                                        </div>
+                                        <div className="col-span-4 text-right font-bold text-red-600">{toBdt(it.amount)}</div>
                                     </div>
                                 )}
                             />
                         </div>
                     </div>
+
+
                 </div>
 
                 {/* ===== Payment banner (bottom) ===== */}
-                <div className="mt-3">
-                    <h3 className="text-center text-xl md:text-2xl font-extrabold text-emerald-800">
-                        আপনার সদাকা জমা করুন
-                    </h3>
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 whitespace-nowrap 
+                text-sm md:text-[18px] leading-5 md:leading-6">
+                    {payInfo.bkash && (
+                        <span className="flex items-center gap-2 shrink-0">
+                            <img src={bkash} alt="bKash" className="h-6 md:h-7 w-auto object-contain align-middle" />
+                            <span>{payInfo.bkash}</span>
+                        </span>
+                    )}
 
-                    <div className="mt-2 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm md:text-base font-semibold">
-                        {payInfo.bkash && <span className="text-pink-600">বিকাশ {payInfo.bkash}</span>}
-                        {payInfo.nagad && <span className="text-red-600">নগদ {payInfo.nagad}</span>}
-                        {payInfo.bank && <span className="text-emerald-700">{payInfo.bank}</span>}
-                        {payInfo.address && <span className="text-gray-800">{payInfo.address}</span>}
-                    </div>
+                    {payInfo.nagad && (
+                        <span className="flex items-center gap-2 shrink-0">
+                            <img src={nagad} alt="Nagad" className="h-6 md:h-7 w-auto object-contain align-middle" />
+                            <span>{payInfo.nagad}</span>
+                        </span>
+                    )}
+
+                    {payInfo.bank && (
+                        <span className="flex items-center gap-2 shrink-0">
+                            <img src={islamiBank} alt="Islami Bank" className="h-6 md:h-7 w-auto object-contain align-middle" />
+                            <span>{payInfo.bank}, {payInfo.address}</span>
+                        </span>
+                    )}
                 </div>
+
             </div>
         </div>
     );

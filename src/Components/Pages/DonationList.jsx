@@ -32,6 +32,7 @@ const DonationList = () => {
     const [endDate, setEndDate] = useState(null);
     const [editDonation, setEditDonation] = useState('');
    
+   console.log(donation);
 
     const [editFields, setEditFields] = useState({
         date: null,           // Date object for DatePicker

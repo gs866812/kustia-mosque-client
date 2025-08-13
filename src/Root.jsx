@@ -14,7 +14,7 @@ const Root = () => {
        <Header />
       </header>
 
-      <main className={`flex-1 ${isHome ? "overflow-hidden" : "overflow-auto"}`}>
+      <main className={`flex-1 ${isHome ? "overflow-hidden bg-[#F4F6E8]" : "overflow-auto"}`}>
         <Outlet />
       </main>
 

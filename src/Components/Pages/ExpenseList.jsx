@@ -38,7 +38,6 @@ const ExpenseList = () => {
     note: ''
   });
 
-   console.log(expenses);
 
 
   // ---- fetch expense list ----
