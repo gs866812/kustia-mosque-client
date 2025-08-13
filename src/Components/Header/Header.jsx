@@ -8,7 +8,7 @@ const Header = () => {
     return (
         <div className='w-full localBG'>
             <div className=' text-white flex justify-center items-center  mx-auto relative'>
-                <Link to='/' className='font-poppins font-bold lg:text-4xl py-3 text-xl'>
+                <Link to='/' className='font-poppins font-bold lg:text-3xl py-2 text-xl'>
                     চিথলিয়া কেন্দ্রীয় জামে মসজিদ
                 </Link>
 
