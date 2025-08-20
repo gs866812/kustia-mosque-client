@@ -187,7 +187,7 @@ const Home = () => {
 
     return (
         <div className="h-full w-full bg-[#F4F6E8] flex flex-col items-center overflow-hidden">
-            <div className="w-[80%] max-w-[1366px] mx-auto px-4 py-3 h-full flex flex-col overflow-hidden gap-8 justify-center mt-6">
+            <div className="w-[90%] max-w-[1366px] mx-auto px-4 py-3 h-full flex flex-col overflow-hidden gap-8 justify-center mt-6">
                 {/* ===== Summary (compact) ===== */}
                 <div className="rounded-2xl shadow-lg border-2 border-yellow-500 bg-white overflow-hidden">
                     <div className="bg-emerald-900 text-white py-1 flex items-center justify-between border-b-2 border-yellow-500">
@@ -251,9 +251,9 @@ const Home = () => {
                 </div>
 
                 {/* ===== Two lists (compact, no extra list header) ===== */}
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 overflow-hidden">
+                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 overflow-hidden w-full">
                     {/* Donation */}
-                    <div className="rounded-2xl border-2 border-yellow-500 bg-white overflow-hidden flex flex-col shadow-2xl">
+                    <div className="rounded-2xl border-2 border-yellow-500 bg-white overflow-hidden flex flex-col ">
 
                         {/* Header (keep yellow bottom border, no vertical lines here) */}
                         <div className="grid grid-cols-12 bg-emerald-900 text-white font-bold px-3 py-2 border-b-2 border-yellow-500">
@@ -271,7 +271,7 @@ const Home = () => {
                             <AutoScrollList
                                 heightPx={visibleRows * rowHeight}
                                 visibleCount={visibleRows}
-                                speedSec={26}
+                                speedSec={80}
                                 rowClass="h-11"
                                 items={donations}
                                 renderRow={(it) => (
@@ -304,12 +304,12 @@ const Home = () => {
                             <AutoScrollList
                                 heightPx={visibleRows * rowHeight}
                                 visibleCount={visibleRows}
-                                speedSec={26}
+                                speedSec={80}
                                 rowClass="h-11"
                                 items={expenses}
                                 renderRow={(it) => (
                                     <div className="grid grid-cols-12 w-full text-xl">
-                                        <div className="col-span-8 truncate pr-2">{it.expense}</div>
+                                        <div className="col-span-8 truncate pr-2 text-red-600">{it.expense}</div>
                                         <div className="col-span-4 text-right font-bold text-red-600">{toBdt(it.amount)}</div>
                                     </div>
                                 )}
