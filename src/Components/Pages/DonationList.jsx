@@ -19,6 +19,8 @@ const DonationList = () => {
 
     const [donation, setDonation] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [paymentOptions, setPaymentOptions] = useState([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [totalQuantity, setTotalQuantity] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
@@ -28,16 +30,19 @@ const DonationList = () => {
 
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("");
+    // const [unit, setUnit] = useState("");
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [editDonation, setEditDonation] = useState('');
    
-   console.log(donation);
+    console.log(paymentOptions);
 
     const [editFields, setEditFields] = useState({
         date: null,           // Date object for DatePicker
         amount: '',
         quantity: '',
+        unit: '',
+        paymentOption: '',
         incomeCategory: '',
         reference: ''
     });
@@ -54,7 +59,9 @@ const DonationList = () => {
                 const res = await axiosSecure.get("/donationCategories", {
                     params: { email: user.email },
                 });
-                setCategories(res?.data || []);
+                setCategories(res?.data?.sorted || []);
+                setUnits(res?.data?.sortedUnit || []);
+                setPaymentOptions(res?.data?.sortedPayment || []);
             } catch (err) {
                 console.error("Category fetch error:", err.message);
             }
@@ -213,13 +220,15 @@ const DonationList = () => {
             date: parsed.isValid() ? parsed.toDate() : null,
             amount: donationItem?.amount ?? '',
             quantity: donationItem?.quantity ?? '',
+            unit: donationItem?.unit ?? '',
+            paymentOption: donationItem?.paymentOption ?? '',
             incomeCategory: donationItem?.incomeCategory ?? '',
             reference: donationItem?.reference ?? ''
         });
     };
 
     // * ******************************************************************************************************
-    const handleEditHadith = async (e) => {
+    const handleEditDonation = async (e) => {
         e.preventDefault();
         if (!user?.email || !editDonation?._id) return;
 
@@ -232,6 +241,8 @@ const DonationList = () => {
                 amount: Number(editFields.amount) || 0,
                 quantity: Number(editFields.quantity) || 0,
                 incomeCategory: editFields.incomeCategory,
+                unit: editFields.unit,
+                paymentOption: editFields.paymentOption,
                 reference: editFields.reference
             };
 
@@ -240,7 +251,6 @@ const DonationList = () => {
                 payload,
                 { params: { email: user.email } }
             );
-            console.log(res.data);
 
             if (res?.data?.modifiedCount > 0) {
                 toast.success("দানটি সফলভাবে আপডেট হয়েছে!");
@@ -397,7 +407,7 @@ const DonationList = () => {
                             </button>
                         </form>
                         <h3 className="font-bold text-lg">দানের তালিকা সম্পাদনা</h3>
-                        <form onSubmit={handleEditHadith} className="space-y-3 my-0">
+                        <form onSubmit={handleEditDonation} className="space-y-3 my-0">
 
                             {/* Date */}
                             <div className="form-control">
@@ -407,6 +417,7 @@ const DonationList = () => {
                                     dateFormat="dd.MMM.yyyy"
                                     placeholderText="Select date"
                                     className="input input-bordered w-full"
+                                    maxDate={new Date()}
                                     isClearable
                                 />
 
@@ -448,6 +459,34 @@ const DonationList = () => {
                                 >
                                     <option value="">Select category</option>
                                     {categories.map((c) => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {/* unit (from DB) */}
+                            <div className="form-control">
+                                <label className="label"><span className="label-text">ইউনিট</span></label>
+                                <select
+                                    className="select select-bordered w-full"
+                                    value={editFields.unit}
+                                    onChange={(e) => setEditFields(prev => ({ ...prev, unit: e.target.value }))}
+                                >
+                                    <option value="">Select unit</option>
+                                    {units.map((c) => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {/* Payment option (from DB) */}
+                            <div className="form-control">
+                                <label className="label"><span className="label-text">পেমেন্ট অপশন</span></label>
+                                <select
+                                    className="select select-bordered w-full"
+                                    value={editFields.paymentOption}
+                                    onChange={(e) => setEditFields(prev => ({ ...prev, paymentOption: e.target.value }))}
+                                >
+                                    <option value="">Select paymentOption</option>
+                                    {paymentOptions.map((c) => (
                                         <option key={c} value={c}>{c}</option>
                                     ))}
                                 </select>

@@ -42,7 +42,7 @@ const DataProvider = ({ children }) => {
                     setUnit(info.unit || []);
                     setReference(info.reference || []);
                     setExpenseCategory(info.expenseCategory || []);
-                    setExpenseUnit(info.expenseUnit || []);
+                    setExpenseUnit(info?.sortedUnit || []);
                     setExpenseReference(info.expenseReference || []);
                 }
             } catch (err) {

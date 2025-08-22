@@ -11,7 +11,7 @@ import ContextData from '../../ContextData';
 import Swal from 'sweetalert2';
 
 const ExpenseList = () => {
-  const { user, refetch, setRefetch, expenseReference = [], expenseCategory = [] } = useContext(ContextData);
+  const { user, refetch, setRefetch, expenseReference = [], expenseCategory = [], expenseUnit = [] } = useContext(ContextData);
   const axiosSecure = useAxiosSecure();
 
   const [expenses, setExpenses] = useState([]);
@@ -33,11 +33,11 @@ const ExpenseList = () => {
     expense: '',
     amount: '',
     quantity: '',
+    unit: '',
     expenseCategory: '',
     reference: '',
     note: ''
   });
-
 
 
   // ---- fetch expense list ----
@@ -186,6 +186,7 @@ const ExpenseList = () => {
       amount: expenseItem?.amount ?? '',
       quantity: expenseItem?.quantity ?? '',
       expenseCategory: expenseItem?.expenseCategory ?? '',
+      unit: expenseItem?.unit ?? '',
       reference: expenseItem?.reference ?? '',
       note: expenseItem?.note ?? ''
     });
@@ -204,6 +205,7 @@ const ExpenseList = () => {
         expense: editFields.expense,
         amount: Number(editFields.amount) || 0,
         quantity: Number(editFields.quantity) || 0,
+        unit: editFields.unit,
         expenseCategory: editFields.expenseCategory,
         reference: editFields.reference,
         note: editFields.note
@@ -371,6 +373,7 @@ const ExpenseList = () => {
                   dateFormat="dd.MMM.yyyy"
                   placeholderText="Select date"
                   className="input input-bordered w-full"
+                  maxDate={new Date()}
                   isClearable
                 />
               </div>
@@ -413,6 +416,20 @@ const ExpenseList = () => {
                 />
               </div>
 
+              {/* Unit (from DB) */}
+              <div className="form-control">
+                <label className="label"><span className="label-text">ইউনিট</span></label>
+                <select
+                  className="select select-bordered w-full"
+                  value={editFields.unit}
+                  onChange={(e) => setEditFields(prev => ({ ...prev, unit: e.target.value }))}
+                >
+                  <option value="">Select unit</option>
+                  {expenseUnit.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
               {/* Category (from DB) */}
               <div className="form-control">
                 <label className="label"><span className="label-text">ক্যাটাগরি</span></label>

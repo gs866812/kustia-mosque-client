@@ -150,7 +150,7 @@ const SubmitDonation = () => {
                                 selected={field.value}
                                 onChange={(date) => field.onChange(date)}
                                 maxDate={new Date()}
-                                minDate={moment().subtract(6, "days").toDate()}
+                                // minDate={moment().subtract(6, "days").toDate()}
                                 dateFormat="dd-MM-yyyy"
                             />
                         )}
