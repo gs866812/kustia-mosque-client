@@ -8,6 +8,8 @@ import DonationList from "./Components/Pages/DonationList";
 import ExpenseList from "./Components/Pages/ExpenseList";
 import HadithList from "./Components/Pages/HadithList";
 import DonorList from "./Components/Pages/DonorList";
+import LookupManager from "./Components/Pages/LookupManager";
+
 
 
 
@@ -28,6 +30,7 @@ export const router = createBrowserRouter([
             { path: "/expense", element: <Protected><ExpenseList /></Protected> },
             { path: "/hadith", element: <Protected><HadithList /></Protected> },
             { path: "/donorList", element: <Protected><DonorList /></Protected> },
+            { path: "/editData", element: <Protected><LookupManager /></Protected> },
         ]
     },
 ]);

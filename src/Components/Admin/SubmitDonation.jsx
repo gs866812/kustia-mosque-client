@@ -7,6 +7,10 @@ import ContextData from "../../ContextData";
 import useAxiosHook from "../../utils/useAxiosHook";
 import useAxiosSecure from "../../utils/useAxiosSecure";
 
+// add this small helper near the top of the file (outside the component)
+
+
+
 
 const SubmitDonation = () => {
     const axiosHook = useAxiosHook(); // Assuming you have a custom hook for axios requests
@@ -25,6 +29,8 @@ const SubmitDonation = () => {
 
 
     const donorIdValue = useWatch({ control, name: "donorId" });
+
+
     // __________________________________________________________________________________________________________
     useEffect(() => {
         const fetchDonorId = async () => {
@@ -67,6 +73,23 @@ const SubmitDonation = () => {
         setUnitOptions(unit || []);
         setReferences(reference || []);
     }, [address, category, unit, reference]);
+
+
+    useEffect(() => {
+        if (!user?.email) return;
+        (async () => {
+            try {
+                const res = await axiosSecure.get("/donationCategories", {
+                    params: { email: user.email },
+                });
+                setUnitOptions(res?.data?.sortedUnit || []);
+            } catch (err) {
+                console.error("Unit fetch error:", err);
+            }
+        })();
+    }, [axiosSecure, user?.email]);
+
+
 
     // ___________________________________________________________________________________________________________
     const [newField, setNewField] = useState({
@@ -288,9 +311,7 @@ const SubmitDonation = () => {
                 {/* Unit */}
                 {!newField.unit ? (
                     <select
-                        {...register("unit", {
-                            // required: true 
-                        })}
+                        {...register("unit")}
                         className="select select-bordered w-full"
                         onChange={(e) =>
                             e.target.value === "ADD_NEW"
@@ -306,6 +327,7 @@ const SubmitDonation = () => {
                         ))}
                         <option value="ADD_NEW">নতুন ইউনিট যোগ করুন...</option>
                     </select>
+
                 ) : (
 
                     <div className="flex gap-2">

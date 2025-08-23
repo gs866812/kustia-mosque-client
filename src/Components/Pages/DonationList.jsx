@@ -34,7 +34,7 @@ const DonationList = () => {
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [editDonation, setEditDonation] = useState('');
-   
+
     console.log(paymentOptions);
 
     const [editFields, setEditFields] = useState({
@@ -47,6 +47,12 @@ const DonationList = () => {
         reference: ''
     });
 
+    const PAYMENT_OPTIONS = [
+        "নগদ টাকা গ্রহণ",
+        "বিকাশ একাউন্ট",
+        "নগদ একাউন্ট",
+        "ব্যাংক একাউন্ট",
+    ];
 
     // * ******************************************************************************************************
 
@@ -246,6 +252,7 @@ const DonationList = () => {
                 reference: editFields.reference
             };
 
+
             const res = await axiosSecure.put(
                 `/updateDonation/${editDonation._id}`,
                 payload,
@@ -362,7 +369,7 @@ const DonationList = () => {
                                                 minimumFractionDigits: 2,
                                                 maximumFractionDigits: 2
                                             })
-                                        )} {donationItem.unit && donationItem.unit}
+                                        )} {}{donationItem.unit || ''}
                                     </td>
                                     <td>{donationItem.incomeCategory}</td>
                                     <td>{donationItem.reference}</td>
@@ -482,15 +489,25 @@ const DonationList = () => {
                                 <label className="label"><span className="label-text">পেমেন্ট অপশন</span></label>
                                 <select
                                     className="select select-bordered w-full"
-                                    value={editFields.paymentOption}
-                                    onChange={(e) => setEditFields(prev => ({ ...prev, paymentOption: e.target.value }))}
+                                    value={editFields.paymentOption || ""}
+                                    onChange={(e) =>
+                                        setEditFields((prev) => ({ ...prev, paymentOption: e.target.value }))
+                                    }
                                 >
-                                    <option value="">Select paymentOption</option>
-                                    {paymentOptions.map((c) => (
-                                        <option key={c} value={c}>{c}</option>
+                                    <option value="">Select payment option</option>
+                                    {PAYMENT_OPTIONS.map((opt) => (
+                                        <option key={opt} value={opt}>{opt}</option>
                                     ))}
+                                    {/* Keep showing an existing non-listed value during edit */}
+                                    {editFields.paymentOption &&
+                                        !PAYMENT_OPTIONS.includes(editFields.paymentOption) && (
+                                            <option value={editFields.paymentOption}>
+                                                {editFields.paymentOption} (existing)
+                                            </option>
+                                        )}
                                 </select>
                             </div>
+
 
                             {/* Reference (from Context) */}
                             <div className="form-control">

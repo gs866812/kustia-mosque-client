@@ -36,6 +36,9 @@ const Header = () => {
                                         <Link to='/donorList'>Donor list</Link>
                                     </li>
                                     <li className='hover:bg-[#134834] rounded-md py-1 font-semibold text-[#134834] hover:text-white'>
+                                        <Link to='/editData'>Edit info</Link>
+                                    </li>
+                                    <li className='hover:bg-[#134834] rounded-md py-1 font-semibold text-[#134834] hover:text-white'>
                                         <Link to='/hadith'>Hadith</Link>
                                     </li>
 
