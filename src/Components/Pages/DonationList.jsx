@@ -20,7 +20,6 @@ const DonationList = () => {
     const [donation, setDonation] = useState([]);
     const [categories, setCategories] = useState([]);
     const [units, setUnits] = useState([]);
-    const [paymentOptions, setPaymentOptions] = useState([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [totalQuantity, setTotalQuantity] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
@@ -34,8 +33,6 @@ const DonationList = () => {
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [editDonation, setEditDonation] = useState('');
-
-    console.log(paymentOptions);
 
     const [editFields, setEditFields] = useState({
         date: null,           // Date object for DatePicker
@@ -67,7 +64,6 @@ const DonationList = () => {
                 });
                 setCategories(res?.data?.sorted || []);
                 setUnits(res?.data?.sortedUnit || []);
-                setPaymentOptions(res?.data?.sortedPayment || []);
             } catch (err) {
                 console.error("Category fetch error:", err.message);
             }
