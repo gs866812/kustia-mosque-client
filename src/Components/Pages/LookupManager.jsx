@@ -344,28 +344,32 @@ const MetaSection = ({ title, kind }) => {
 
 const LookupManager = () => {
     return (
-        <div className="px-5">
+        <div className="px-5 mt-5">
             <h2 className="text-2xl font-semibold mb-6">তালিকা ব্যবস্থাপনা (সব এক পেজে)</h2>
 
-            {/* Section-1: incomeCategoriesCollections */}
-            <MetaSection title="Section-1: আয়ের ক্যাটাগরি (Donations)" kind="incomeCategories" />
+            {/* Section-1: addressCollections */}
+            <MetaSection title="Section-1: ঠিকানা (Address)" kind="addresses" />
 
-            {/* Section-2: expenseCategoriesCollections */}
-            <MetaSection title="Section-2: খরচের ক্যাটাগরি (Expenses)" kind="expenseCategories" />
+            {/* Section-2: incomeCategoriesCollections */}
+            <MetaSection title="Section-2: আয়ের ক্যাটাগরি (Donations)" kind="incomeCategories" />
 
-            {/* Section-3: unitCollections */}
-            <MetaSection title="Section-3: ইউনিট (Donations)" kind="units" />
+            {/* Section-3: expenseCategoriesCollections */}
+            <MetaSection title="Section-3: খরচের ক্যাটাগরি (Expenses)" kind="expenseCategories" />
 
-            {/* Section-4: expenseUnitCollections */}
-            <MetaSection title="Section-4: ইউনিট (Expenses)" kind="expenseUnits" />
+            {/* Section-4: unitCollections */}
+            <MetaSection title="Section-4: ইউনিট (Donations)" kind="units" />
 
-            {/* Section-5: referenceCollections */}
-            <MetaSection title="Section-5: রেফারেন্স (Donations)" kind="references" />
+            {/* Section-5: expenseUnitCollections */}
+            <MetaSection title="Section-5: ইউনিট (Expenses)" kind="expenseUnits" />
 
-            {/* Section-6: expenseReferenceCollections */}
-            <MetaSection title="Section-6: রেফারেন্স (Expenses)" kind="expenseReferences" />
+            {/* Section-6: referenceCollections */}
+            <MetaSection title="Section-6: রেফারেন্স (Donations)" kind="references" />
+
+            {/* Section-7: expenseReferenceCollections */}
+            <MetaSection title="Section-7: রেফারেন্স (Expenses)" kind="expenseReferences" />
         </div>
     );
 };
+
 
 export default LookupManager;

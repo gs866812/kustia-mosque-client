@@ -13,7 +13,7 @@ import moment from 'moment';
 
 
 const DonationList = () => {
-    const { user, refetch, setRefetch, reference } = useContext(ContextData);
+    const { user, refetch, setRefetch, reference, address = [] } = useContext(ContextData);
 
     const axiosSecure = useAxiosSecure();
 
@@ -39,6 +39,9 @@ const DonationList = () => {
         amount: '',
         quantity: '',
         unit: '',
+        donorName: '',
+        address: '',
+        phone: '',
         paymentOption: '',
         incomeCategory: '',
         reference: ''
@@ -223,6 +226,9 @@ const DonationList = () => {
             amount: donationItem?.amount ?? '',
             quantity: donationItem?.quantity ?? '',
             unit: donationItem?.unit ?? '',
+            donorName: donationItem?.donorName || '',
+            address: donationItem?.address || '',
+            phone: donationItem?.phone || '',
             paymentOption: donationItem?.paymentOption ?? '',
             incomeCategory: donationItem?.incomeCategory ?? '',
             reference: donationItem?.reference ?? ''
@@ -243,7 +249,10 @@ const DonationList = () => {
                 amount: Number(editFields.amount) || 0,
                 quantity: Number(editFields.quantity) || 0,
                 incomeCategory: editFields.incomeCategory,
+                donorName: editFields.donorName,
+                address: editFields.address,
                 unit: editFields.unit,
+                phone: editFields.phone,
                 paymentOption: editFields.paymentOption,
                 reference: editFields.reference
             };
@@ -365,7 +374,7 @@ const DonationList = () => {
                                                 minimumFractionDigits: 2,
                                                 maximumFractionDigits: 2
                                             })
-                                        )} {}{donationItem.unit || ''}
+                                        )} { }{donationItem.unit || ''}
                                     </td>
                                     <td>{donationItem.incomeCategory}</td>
                                     <td>{donationItem.reference}</td>
@@ -426,6 +435,42 @@ const DonationList = () => {
 
                             </div>
 
+                            {/* Donor */}
+                            <div className="form-control">
+                                <label className="label"><span className="label-text">দাতার নাম </span></label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered w-full"
+                                    value={editFields.donorName}
+                                    onChange={(e) => setEditFields(prev => ({ ...prev, donorName: e.target.value }))}
+                                    placeholder="Donor name"
+                                />
+                            </div>
+                            {/* Address (from DB) */}
+                            <div className="form-control">
+                                <label className="label"><span className="label-text">দাতার ঠিকানা</span></label>
+                                <select
+                                    className="select select-bordered w-full"
+                                    value={editFields.address}
+                                    onChange={(e) => setEditFields(prev => ({ ...prev, address: e.target.value }))}
+                                >
+                                    <option value="">Select address</option>
+                                    {address.map((c) => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {/* Phone */}
+                            <div className="form-control">
+                                <label className="label"><span className="label-text">দাতার মোবাইল </span></label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered w-full"
+                                    value={editFields.phone}
+                                    onChange={(e) => setEditFields(prev => ({ ...prev, phone: e.target.value }))}
+                                    placeholder="Mobile number"
+                                />
+                            </div>
                             {/* Amount */}
                             <div className="form-control">
                                 <label className="label"><span className="label-text">দানের পরিমাণ</span></label>

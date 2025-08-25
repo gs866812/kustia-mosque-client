@@ -125,7 +125,7 @@ const SubmitExpense = () => {
 
     return (
         <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg">
-            <h2 className="text-xl font-bold mb-4 text-center">খরচের বিবরণ</h2>
+            <h2 className="text-xl font-bold mb-4">খরচের বিবরণ</h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {/* Date */}
