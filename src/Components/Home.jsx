@@ -271,8 +271,8 @@ const Home = () => {
                             <AutoScrollList
                                 heightPx={visibleRows * rowHeight}
                                 visibleCount={visibleRows}
-                                speedSec={80}
-                                rowClass="h-11"
+                                speedSec={100}
+                                rowClass="h-11 w-full border-b border-yellow-500/30 last:border-b-0"
                                 items={donations}
                                 renderRow={(it) => (
                                     <div className="grid grid-cols-12 w-full text-xl">
@@ -304,8 +304,8 @@ const Home = () => {
                             <AutoScrollList
                                 heightPx={visibleRows * rowHeight}
                                 visibleCount={visibleRows}
-                                speedSec={80}
-                                rowClass="h-11"
+                                speedSec={100}
+                                rowClass="h-11 w-full border-b border-yellow-500/30 last:border-b-0"
                                 items={expenses}
                                 renderRow={(it) => (
                                     <div className="grid grid-cols-12 w-full text-xl">

@@ -3,12 +3,19 @@ import AddExpenseModal from '../Modal/AddExpenseModal';
 import useAxiosSecure from '../../utils/useAxiosSecure';
 import { convertToBanglaDigits } from '../../utils/convertNumber';
 import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { FaRegEdit } from 'react-icons/fa';
 import { MdDeleteForever } from 'react-icons/md';
+import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import moment from 'moment';
 import ContextData from '../../ContextData';
 import Swal from 'sweetalert2';
+
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import HindBase64 from '../../../src/pdf/fonts/HindSiliguri-Regular.js';
 
 const ExpenseList = () => {
   const { user, refetch, setRefetch, expenseReference = [], expenseCategory = [], expenseUnit = [] } = useContext(ContextData);
@@ -23,9 +30,12 @@ const ExpenseList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [category, setCategory] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+
+  const [exporting, setExporting] = useState(false);
 
   const [editExpense, setEditExpense] = useState(null);
   const [editFields, setEditFields] = useState({
@@ -39,6 +49,11 @@ const ExpenseList = () => {
     note: ''
   });
 
+  // --- debounce search to match table + export
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
 
   // ---- fetch expense list ----
   useEffect(() => {
@@ -48,7 +63,7 @@ const ExpenseList = () => {
         const res = await axiosSecure.get(`/expenseList`, {
           params: {
             email: user.email,
-            search,
+            search: debouncedSearch,
             category,
             startDate: startDate ? startDate.toISOString() : "",
             endDate: endDate ? endDate.toISOString() : "",
@@ -68,21 +83,17 @@ const ExpenseList = () => {
       }
     };
     fetchExpenseList();
-  }, [axiosSecure, refetch, user?.email, search, category, startDate, endDate, currentPage, itemsPerPage]);
+  }, [axiosSecure, refetch, user?.email, debouncedSearch, category, startDate, endDate, currentPage, itemsPerPage]);
 
-  // ---- pagination renderer (same style as DonationList) ----
+  // ---- pagination renderer ----
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const renderPagination = () => {
     let pages = [];
     const maxButtons = 5;
 
     pages.push(
-      <button
-        key="prev"
-        className="btn btn-sm"
-        disabled={currentPage === 1}
-        onClick={() => setCurrentPage(currentPage - 1)}
-      >
+      <button key="prev" className="btn btn-sm" disabled={currentPage === 1}
+        onClick={() => setCurrentPage(currentPage - 1)}>
         Prev
       </button>
     );
@@ -97,21 +108,15 @@ const ExpenseList = () => {
 
     if (startPage > 1) {
       pages.push(
-        <button
-          key={1}
-          className={`btn btn-sm ${currentPage === 1 ? 'btn-primary' : ''}`}
-          onClick={() => setCurrentPage(1)}
-        >
-          1
-        </button>
+        <button key={1} className={`btn btn-sm ${currentPage === 1 ? 'btn-primary' : ''}`}
+          onClick={() => setCurrentPage(1)}>1</button>
       );
       if (startPage > 2) pages.push(<span key="dots-start" className="px-2">...</span>);
     }
 
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
-        <button
-          key={i}
+        <button key={i}
           className={`btn btn-sm hover:localBG ${currentPage === i ? 'localBG text-white' : ''}`}
           onClick={() => setCurrentPage(i)}
         >
@@ -123,23 +128,17 @@ const ExpenseList = () => {
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) pages.push(<span key="dots-end" className="px-2">...</span>);
       pages.push(
-        <button
-          key={totalPages}
+        <button key={totalPages}
           className={`btn btn-sm ${currentPage === totalPages ? 'btn-primary' : ''}`}
-          onClick={() => setCurrentPage(totalPages)}
-        >
+          onClick={() => setCurrentPage(totalPages)}>
           {totalPages}
         </button>
       );
     }
 
     pages.push(
-      <button
-        key="next"
-        className="btn btn-sm"
-        disabled={currentPage === totalPages}
-        onClick={() => setCurrentPage(currentPage + 1)}
-      >
+      <button key="next" className="btn btn-sm" disabled={currentPage === totalPages}
+        onClick={() => setCurrentPage(currentPage + 1)}>
         Next
       </button>
     );
@@ -199,9 +198,7 @@ const ExpenseList = () => {
 
     try {
       const payload = {
-        date: editFields.date
-          ? moment(editFields.date).format("DD.MMM.YYYY")
-          : editExpense.date,
+        date: editFields.date ? moment(editFields.date).format("DD.MMM.YYYY") : editExpense.date,
         expense: editFields.expense,
         amount: Number(editFields.amount) || 0,
         quantity: Number(editFields.quantity) || 0,
@@ -211,11 +208,7 @@ const ExpenseList = () => {
         note: editFields.note
       };
 
-      const res = await axiosSecure.put(
-        `/updateExpense/${editExpense._id}`,
-        payload,
-        { params: { email: user.email } }
-      );
+      const res = await axiosSecure.put(`/updateExpense/${editExpense._id}`, payload, { params: { email: user.email } });
 
       if (res?.data?.modifiedCount > 0) {
         toast.success("খরচটি সফলভাবে আপডেট হয়েছে!");
@@ -230,6 +223,128 @@ const ExpenseList = () => {
     }
   };
 
+  // ========= EXPORT HELPERS (full filtered set, not paginated) =========
+  const fetchAllExpensesForExport = async () => {
+    if (!user?.email) return { data: [], totalAmount: 0, totalQuantity: 0, totalCount: 0 };
+    const res = await axiosSecure.get('/expenseList/export', {
+      params: {
+        email: user.email,
+        search: debouncedSearch,
+        category,
+        startDate: startDate ? startDate.toISOString() : "",
+        endDate: endDate ? endDate.toISOString() : "",
+      }
+    });
+    return res?.data || { data: [], totalAmount: 0, totalQuantity: 0, totalCount: 0 };
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      setExporting(true);
+      const { data, totalCount } = await fetchAllExpensesForExport();
+      if (!totalCount) {
+        toast.error("কোনো তথ্য নেই ডাউনলোড করার জন্য");
+        return;
+      }
+
+      const rows = data.map(d => ({
+        Expense: d.expense ?? "",
+        Amount: Number(d.amount || 0),
+        Quantity: Number(d.quantity || 0),
+        Unit: d.unit ?? "",
+        Category: d.expenseCategory ?? "",
+        Reference: d.reference ?? "",
+        Note: d.note ?? "",
+        Date: d.date ?? "",
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+
+      const headers = Object.keys(rows[0] || { Expense: "", Amount: 0, Quantity: 0, Unit: "", Category: "", Reference: "", Note: "", Date: "" });
+      const colWidths = headers.map(h => {
+        const maxLen = Math.max(h.length, ...rows.map(r => String(r[h] ?? "").length));
+        return { wch: Math.min(Math.max(maxLen + 2, 10), 40) };
+      });
+      ws['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Expenses');
+      const filename = `expenses_${debouncedSearch ? `search_${debouncedSearch}_` : ""}${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, filename);
+    } catch (err) {
+      console.error(err);
+      toast.error("Excel তৈরি করতে সমস্যা হয়েছে");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setExporting(true);
+      const { data, totalCount, totalAmount, totalQuantity } = await fetchAllExpensesForExport();
+      if (!totalCount) {
+        toast.error("কোনো তথ্য নেই ডাউনলোড করার জন্য");
+        return;
+      }
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+      // Bangla font
+      doc.addFileToVFS('HindSiliguri-Regular.ttf', HindBase64);
+      doc.addFont('HindSiliguri-Regular.ttf', 'HindSiliguri', 'normal');
+      doc.setFont('HindSiliguri', 'normal');
+
+      // Title + subline
+      doc.setFontSize(14);
+      doc.text('Expense List', 40, 40);
+      doc.setFontSize(10);
+      const sub = [
+        debouncedSearch ? `Search: "${debouncedSearch}"` : "All expenses",
+        category ? `Category: ${category}` : "All categories",
+        startDate && endDate ? `Range: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}` : "No date filter",
+        `Count: ${totalCount}`,
+        `Total Amount: ${Number(totalAmount).toLocaleString()}`,
+        `Total Qty: ${Number(totalQuantity).toLocaleString()}`
+      ].join('  |  ');
+      doc.text(sub, 40, 60);
+
+      const head = [['Expense', 'Amount', 'Qty', 'Unit', 'Category', 'Reference', 'Note', 'Date']];
+      const body = data.map(d => [
+        d.expense ?? '',
+        Number(d.amount || 0).toLocaleString(),
+        Number(d.quantity || 0).toLocaleString(),
+        d.unit ?? '',
+        d.expenseCategory ?? '',
+        d.reference ?? '',
+        d.note ?? '',
+        d.date ?? ''
+      ]);
+
+      autoTable(doc, {
+        startY: 80,
+        head,
+        body,
+        styles: { font: 'HindSiliguri', fontSize: 10, cellPadding: 6, overflow: 'linebreak' },
+        headStyles: { font: 'HindSiliguri', fillColor: [26, 115, 232], textColor: 255 },
+        margin: { top: 80, bottom: 40, left: 40, right: 40 },
+        didDrawPage: () => {
+          const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+          doc.setFontSize(9);
+          doc.text(`Generated: ${new Date().toLocaleString()}`, 40, pageHeight - 20);
+        },
+      });
+
+      const filename = `expenses_${debouncedSearch ? `search_${debouncedSearch}_` : ""}${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(filename);
+    } catch (err) {
+      console.error(err);
+      toast.error("PDF তৈরি করতে সমস্যা হয়েছে");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className='px-5'>
       <section className='flex justify-between items-center mb-4'>
@@ -237,15 +352,25 @@ const ExpenseList = () => {
         <AddExpenseModal />
       </section>
 
-      {/* Filters */}
+      {/* Filters + export */}
       <section className="flex justify-between gap-3 mb-4">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="input input-bordered"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-        />
+        <div className='flex gap-2 items-center'>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="input input-bordered"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+          />
+          <div className='flex gap-2 w-[50px]'>
+            <button className="cursor-pointer" type="button" onClick={handleDownloadExcel} disabled={exporting} title="Download Excel (full filtered list)">
+              <FaFileExcel className="text-green-600" size={20} />
+            </button>
+            <button className="cursor-pointer" type="button" onClick={handleDownloadPDF} disabled={exporting} title="Download PDF (full filtered list)">
+              <FaFilePdf className="text-red-500" size={20} />
+            </button>
+          </div>
+        </div>
 
         <div className='flex gap-2'>
           <DatePicker
@@ -291,6 +416,7 @@ const ExpenseList = () => {
                 <th>খরচের নাম</th>
                 <th>টাকার পরিমাণ</th>
                 <th>জিনিসের পরিমান</th>
+                <th>ইউনিট</th>
                 <th>ক্যাটাগরি</th>
                 <th>রেফারেন্স</th>
                 <th>নোট</th>
@@ -316,23 +442,18 @@ const ExpenseList = () => {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                       })
-                    )} {item.unit && item.unit}
+                    )}
                   </td>
+                  <td>{item.unit && item.unit}</td>
                   <td>{item.expenseCategory}</td>
                   <td>{item.reference}</td>
                   <td>{item.note}</td>
                   <td>{item.date}</td>
                   <td className='space-x-1'>
-                    <button
-                      className='btn btn-sm bg-yellow-500'
-                      onClick={() => handleEdit(item)}
-                    >
+                    <button className='btn btn-sm bg-yellow-500' onClick={() => handleEdit(item)}>
                       <FaRegEdit />
                     </button>
-                    <button
-                      className='btn btn-sm bg-red-500 text-white'
-                      onClick={() => handleDelete(item._id)}
-                    >
+                    <button className='btn btn-sm bg-red-500 text-white' onClick={() => handleDelete(item._id)}>
                       <MdDeleteForever />
                     </button>
                   </td>
@@ -340,13 +461,12 @@ const ExpenseList = () => {
               ))}
             </tbody>
 
-            {/* Totals (entire filtered set) */}
             <tfoot>
               <tr className='bg-gray-100 text-center font-bold'>
                 <td>মোট</td>
                 <td>{convertToBanglaDigits(totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }))}</td>
                 <td>{convertToBanglaDigits(totalQuantity.toLocaleString(undefined, { minimumFractionDigits: 2 }))}</td>
-                <td colSpan={5}></td>
+                <td colSpan={6}></td>
               </tr>
             </tfoot>
           </table>
@@ -358,14 +478,11 @@ const ExpenseList = () => {
         <dialog id="editExpenseModal" className="modal">
           <div className="modal-box px-8">
             <form method="dialog">
-              <button className="btn btn-sm btn-circle bg-red-400 hover:bg-red-500 text-white absolute right-2 top-2">
-                ✕
-              </button>
+              <button className="btn btn-sm btn-circle bg-red-400 hover:bg-red-500 text-white absolute right-2 top-2">✕</button>
             </form>
             <h3 className="font-bold text-lg">খরচ সম্পাদনা</h3>
 
             <form onSubmit={handleEditSubmit} className="space-y-3 my-0">
-              {/* Date */}
               <div className="form-control">
                 <DatePicker
                   selected={editFields.date}
@@ -378,7 +495,6 @@ const ExpenseList = () => {
                 />
               </div>
 
-              {/* Expense name */}
               <div className="form-control">
                 <label className="label"><span className="label-text">খরচের নাম</span></label>
                 <input
@@ -390,7 +506,6 @@ const ExpenseList = () => {
                 />
               </div>
 
-              {/* Amount */}
               <div className="form-control">
                 <label className="label"><span className="label-text">টাকার পরিমাণ</span></label>
                 <input
@@ -403,7 +518,6 @@ const ExpenseList = () => {
                 />
               </div>
 
-              {/* Quantity */}
               <div className="form-control">
                 <label className="label"><span className="label-text">পরিমান</span></label>
                 <input
@@ -416,7 +530,6 @@ const ExpenseList = () => {
                 />
               </div>
 
-              {/* Unit (from DB) */}
               <div className="form-control">
                 <label className="label"><span className="label-text">ইউনিট</span></label>
                 <select
@@ -430,7 +543,7 @@ const ExpenseList = () => {
                   ))}
                 </select>
               </div>
-              {/* Category (from DB) */}
+
               <div className="form-control">
                 <label className="label"><span className="label-text">ক্যাটাগরি</span></label>
                 <select
@@ -445,7 +558,6 @@ const ExpenseList = () => {
                 </select>
               </div>
 
-              {/* Reference (from Context) */}
               <div className="form-control">
                 <label className="label"><span className="label-text">রেফারেন্স</span></label>
                 <select
@@ -460,7 +572,6 @@ const ExpenseList = () => {
                 </select>
               </div>
 
-              {/* Note */}
               <div className="form-control">
                 <label className="label"><span className="label-text">নোট</span></label>
                 <textarea
@@ -483,9 +594,7 @@ const ExpenseList = () => {
       {/* Pagination */}
       <section className='flex justify-center items-center'>
         <div className="flex items-center my-3 gap-2">
-          <div className="flex gap-1">
-            {renderPagination()}
-          </div>
+          <div className="flex gap-1">{renderPagination()}</div>
           <select
             className="border border-gray-300 rounded-md py-1"
             value={itemsPerPage}
