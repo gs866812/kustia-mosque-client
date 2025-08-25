@@ -11,6 +11,14 @@ import useAxiosSecure from "../../utils/useAxiosSecure";
 
 
 
+// small utility to clear donor-related fields
+const resetDonorFields = (setValue) => {
+    setValue("donorName", "");
+    setValue("address", "");
+    setValue("phone", "");
+};
+
+
 
 const SubmitDonation = () => {
     const axiosHook = useAxiosHook(); // Assuming you have a custom hook for axios requests
@@ -25,7 +33,15 @@ const SubmitDonation = () => {
         reset,
         setValue,
         formState: { errors },
-    } = useForm();
+    } = useForm({
+        defaultValues: {
+            donorId: "",
+            donorName: "",
+            address: "",
+            phone: "",
+        },
+    });
+
 
 
     const donorIdValue = useWatch({ control, name: "donorId" });
@@ -33,34 +49,55 @@ const SubmitDonation = () => {
 
     // __________________________________________________________________________________________________________
     useEffect(() => {
-        const fetchDonorId = async () => {
-            if (!donorIdValue) return;
+        const idRaw = (donorIdValue ?? "").toString().trim();
 
+        // If donorId is empty → reset and stop
+        if (!idRaw) {
+            resetDonorFields(setValue);
+            return;
+        }
+
+        // If only numeric donorId is supported, validate it
+        const idNum = Number(idRaw);
+        if (!Number.isFinite(idNum)) {
+            resetDonorFields(setValue);
+            return;
+        }
+
+        let cancelled = false;
+
+        (async () => {
             try {
-                // const res = await axiosSecure.get(`/donor/${donorIdValue}`);
-                const res = await axiosSecure.get(`/getDonorId/${donorIdValue}?email=${user?.email}`);
-                const donor = res?.data;
-                
+                const res = await axiosSecure.get(`/getDonorId/${idNum}`, {
+                    params: { email: user?.email },
+                });
+                if (cancelled) return;
 
+                const donor = res?.data;
                 if (donor?.donorName) {
-                    setValue("donorName", donor.donorName);
-                    setValue("address", donor.address);
-                    setValue("phone", donor.phone);
+                    setValue("donorName", donor.donorName || "");
+                    setValue("address", donor.address || "");
+                    setValue("phone", donor.phone || "");
+
+                    // ensure the select has this address option
+                    const addr = (donor.address || "").trim();
+                    if (addr) {
+                        setAddressList(prev => (prev.includes(addr) ? prev : [addr, ...prev]));
+                    }
                 } else {
-                    // Reset to default values if donor not found
-                    setValue("donorName", "");
-                    setValue("address", "");
-                    setValue("phone", "");
+                    resetDonorFields(setValue);
+                    toast.error("Donor not found");
                 }
             } catch (err) {
-                toast.error("Donor not found or error fetching:", err.message);
+                resetDonorFields(setValue);
+                console.error("Donor lookup failed", err.message);
             }
-        };
+        })();
+
+        return () => { cancelled = true; };
+    }, [donorIdValue, user?.email, axiosSecure, setValue, refetch]);
 
 
-        fetchDonorId();
-
-    }, [user?.email, axiosSecure, donorIdValue, setValue, refetch]);
     // __________________________________________________________________________________________________________
     // Initial static values
     const [addressList, setAddressList] = useState([]);

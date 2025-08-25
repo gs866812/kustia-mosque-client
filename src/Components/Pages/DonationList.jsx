@@ -10,6 +10,11 @@ import { MdDeleteForever } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import moment from 'moment';
+import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 
 const DonationList = () => {
@@ -33,6 +38,8 @@ const DonationList = () => {
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [editDonation, setEditDonation] = useState('');
+    const [exporting, setExporting] = useState(false);
+
 
     const [editFields, setEditFields] = useState({
         date: null,           // Date object for DatePicker
@@ -278,6 +285,134 @@ const DonationList = () => {
     };
 
     // * ******************************************************************************************************
+    const fetchAllDonorsForExport = async () => {
+        if (!user?.email) return { data: [], totalCount: 0, totalDonateAmount: 0 };
+        // use current search (debounced to match UI), same as your table view
+        const res = await axiosSecure.get('/donorList/export', {
+            params: { email: user.email, search: debouncedSearch }
+        });
+        return res?.data || { data: [], totalCount: 0, totalDonateAmount: 0 };
+    };
+    // _______________________________________________________________________________________________________
+    const handleDownloadExcel = async () => {
+        try {
+            setExporting(true);
+            const { data, totalCount } = await fetchAllDonorsForExport();
+            if (!totalCount) {
+                toast.error("কোনো তথ্য নেই ডাউনলোড করার জন্য");
+                return;
+            }
+
+            // shape rows
+            const rows = data.map(d => ({
+                Donor_ID: d.donorId ?? "",
+                Name: d.donorName ?? "",
+                Address: d.donorAddress ?? "",
+                Contact: d.donorContact ?? "",
+                Donate_Amount: Number(d.donateAmount || 0),
+            }));
+
+            // build workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(rows);
+
+            // optional: auto-fit columns
+            const headers = Object.keys(rows[0] || { Donor_ID: "", Name: "", Address: "", Contact: "", Donate_Amount: 0 });
+            const colWidths = headers.map(h => {
+                const maxLen = Math.max(
+                    h.length,
+                    ...rows.map(r => String(r[h] ?? "").length)
+                );
+                return { wch: Math.min(Math.max(maxLen + 2, 10), 40) }; // clamp 10–40
+            });
+            ws['!cols'] = colWidths;
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Donors');
+
+            const filename = `donors_${debouncedSearch ? `search_${debouncedSearch}_` : ""}${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, filename);
+        } catch (err) {
+            console.error(err);
+            toast.error("Excel তৈরি করতে সমস্যা হয়েছে");
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    // _______________________________________________________________________________________________________
+    const handleDownloadPDF = async () => {
+        try {
+            setExporting(true);
+            const { data, totalCount, totalDonateAmount } = await fetchAllDonorsForExport();
+            if (!totalCount) {
+                toast.error("কোনো তথ্য নেই ডাউনলোড করার জন্য");
+                return;
+            }
+
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' }); // landscape fits wide tables better
+
+            const title = 'Donor List';
+            doc.setFontSize(14);
+            doc.text(title, 40, 40);
+
+            // subline with search and totals (optional)
+            doc.setFontSize(10);
+            const sub = [
+                debouncedSearch ? `Search: "${debouncedSearch}"` : "All donors",
+                `Count: ${totalCount}`,
+                `Total Donate Amount: ${Number(totalDonateAmount).toLocaleString()}`,
+            ].join('  |  ');
+            doc.text(sub, 40, 60);
+
+            const head = [['Donor ID', 'Name', 'Address', 'Contact', 'Donate Amount']];
+            const body = data.map(d => [
+                d.donorId ?? '',
+                d.donorName ?? '',
+                d.donorAddress ?? '',
+                d.donorContact ?? '',
+                Number(d.donateAmount || 0).toLocaleString(),
+            ]);
+
+            doc.autoTable({
+                startY: 80,
+                head,
+                body,
+                styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak' },
+                headStyles: { fillColor: [26, 115, 232] },
+                columnStyles: {
+                    0: { cellWidth: 70 },
+                    1: { cellWidth: 160 },
+                    2: { cellWidth: 220 },
+                    3: { cellWidth: 140 },
+                    4: { cellWidth: 120, halign: 'right' },
+                },
+                didDrawPage: (data) => {
+                    // footer
+                    const pageSize = doc.internal.pageSize;
+                    const pageHeight = pageSize.height || pageSize.getHeight();
+                    doc.setFontSize(9);
+                    doc.text(
+                        `Generated: ${new Date().toLocaleString()}`,
+                        40,
+                        pageHeight - 20
+                    );
+                },
+            });
+
+            const filename = `donors_${debouncedSearch ? `search_${debouncedSearch}_` : ""}${new Date().toISOString().slice(0, 10)}.pdf`;
+            doc.save(filename);
+        } catch (err) {
+            console.error(err);
+            toast.error("PDF তৈরি করতে সমস্যা হয়েছে");
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    // _______________________________________________________________________________________________________
+
+
+    // * ******************************************************************************************************
     return (
         <div className='px-5'>
 
@@ -288,13 +423,33 @@ const DonationList = () => {
 
 
             <section className="flex justify-between gap-3 mb-4">
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    className="input input-bordered"
-                    value={search}
-                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                />
+                <div className='flex gap-2 items-center'>
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        className="input input-bordered"
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                    />
+                    <div className='flex gap-2 w-[50px]'>
+                        <span
+                            className="cursor-pointer"
+                            title="Download Excel (full filtered list)"
+                            onClick={handleDownloadExcel}
+                            disabled={exporting}
+                        >
+                            <FaFileExcel className="text-green-600" size={20} />
+                        </span>
+                        <span
+                            className="cursor-pointer"
+                            title="Download PDF (full filtered list)"
+                            onClick={handleDownloadPDF}
+                            disabled={exporting}
+                        >
+                            <FaFilePdf className="text-red-600" size={20} />
+                        </span>
+                    </div>
+                </div>
 
 
 
