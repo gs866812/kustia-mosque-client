@@ -14,4 +14,3 @@ const base64 = readFileSync(ttfPath, { encoding: 'base64' });
 const js     = `export default "${base64}";\n`;
 writeFileSync(outPath, js);
 
-console.log('Wrote', outPath);
